@@ -11,17 +11,12 @@ const Logo = ({ isScrolled = false }: { isScrolled?: boolean }) => {
     >
       <Link href={"/"} className="text-center flex items-center gap-2">
         <Image
-          src={"/logo-icon.png"}
-          alt="Elena Store"
+          src={isScrolled ? "/dark-text-logo.png" : "/light-text-logo.png"}
+          alt="Elwazeer Store"
           width={300}
           height={300}
           className="w-fit max-h-[62px] object-contain object-center"
         />
-        <p
-          className={`text-2xl font-black ${isScrolled ? "text-white" : "text-secondary"}`}
-        >
-          إلينا
-        </p>
       </Link>
     </motion.div>
   );

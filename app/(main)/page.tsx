@@ -80,10 +80,10 @@ export default async function Home({
           {servicesContent.map(({ icon: Icon, title, desc }) => (
             <div
               key={title}
-              className="space-y-4 text-center p-10 rounded-3xl bg-secondary text-[#94A3B8] border shadow"
+              className="space-y-4 text-center p-10 rounded-3xl bg-primary text-gray-300 border shadow"
             >
               <div className="size-14 mx-auto flex items-center justify-center rounded-lg bg-white/10">
-                <Icon className="size-10 text-primary" />
+                <Icon className="size-10 text-secondary" />
               </div>
               <div className="flex flex-col gap-2">
                 <h3 className="text-lg text-white font-medium">{title}</h3>
@@ -93,16 +93,16 @@ export default async function Home({
           ))}
         </div>
 
-        <ProductSlider 
-          title="الاكثر مبيعا" 
+        <ProductSlider
+          title="الاكثر مبيعا"
           subtitle="مجموعة من أرقى التصاميم التي لاقت استحسان الجميع"
-          products={bestSellers.data} 
+          products={bestSellers.data}
         />
 
-        <ProductSlider 
-          title="أحدث المنتجات" 
+        <ProductSlider
+          title="أحدث المنتجات"
           subtitle="استكشفي أحدث صيحات الموضة من تشكيلتنا الجديدة"
-          products={latestProducts.data} 
+          products={latestProducts.data}
         />
 
         <div className="space-y-6">

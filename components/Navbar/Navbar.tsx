@@ -27,15 +27,15 @@ import {
   useLogout,
   useWishlist,
 } from "@/lib/api/hooks";
+import { motion } from "motion/react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { CiViewList } from "react-icons/ci";
 import { toast } from "sonner";
 import Logo from "../Logo";
 import NavbarLinks from "../NavbarLinks";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { motion } from "motion/react";
 
 const navLinks = [
   {
@@ -81,7 +81,7 @@ const Navbar = () => {
       transition={{ duration: 0.8, ease: "easeOut" }}
       className={`fixed border-b z-50 top-0 w-full transition-all duration-500 end-0 px-4 py-3 ${
         isScrolled
-          ? "bg-secondary border-b-white/30 backdrop-blur-xl border-b shadow-sm py-2"
+          ? "bg-primary border-b-white/30 backdrop-blur-xl border-b shadow-sm py-2"
           : "bg-white py-4"
       }`}
     >
@@ -109,17 +109,19 @@ const Navbar = () => {
           </SheetContent>
         </Sheet>
         <div className="flex items-center">
-          <Logo isScrolled={isScrolled}/>
+          <Logo isScrolled={isScrolled} />
           <ul className="px-4 hidden md:flex items-center gap-2">
             {navLinks.map((link, linkIdx) => {
               const isActive = pathname === link.href;
               return (
                 <li key={linkIdx} className="relative group">
                   <Link
-                    className={`relative flex items-center text-lg font-medium transition-colors duration-300 hover:text-primary px-4 py-2 ${
+                    className={`relative flex items-center text-lg font-medium transition-colors duration-300  px-4 py-2 ${
                       isActive
-                        ?  "text-primary"
-                        : isScrolled ? "text-white" : "text-gray-600 "
+                        ? "text-secondary"
+                        : isScrolled
+                          ? "text-white hover:text-secondary"
+                          : "text-gray-600 hover:text-primary"
                     }`}
                     href={link.href}
                   >
@@ -127,7 +129,7 @@ const Navbar = () => {
                     {isActive && (
                       <motion.div
                         layoutId="nav-underline"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full mx-4"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-secondary rounded-full mx-4"
                         transition={{
                           type: "spring",
                           stiffness: 380,
@@ -145,7 +147,9 @@ const Navbar = () => {
                   className={`relative flex items-center text-lg font-medium transition-colors duration-300 px-4 py-2 ${
                     pathname === "/orders"
                       ? "text-primary"
-                      : isScrolled ? "text-white" : "text-gray-600 hover:text-primary"
+                      : isScrolled
+                        ? "text-white"
+                        : "text-gray-600 hover:text-primary"
                   }`}
                   href={"/orders"}
                 >
@@ -218,7 +222,7 @@ const Navbar = () => {
                 <DropdownMenu dir="rtl">
                   <DropdownMenuTrigger asChild className="outline-0">
                     <Button
-                      variant={"default"}
+                      variant={isScrolled ? "secondary" : "default"}
                       size={"icon-lg"}
                       className="rounded-full"
                     >

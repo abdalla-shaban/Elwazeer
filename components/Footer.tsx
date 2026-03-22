@@ -73,19 +73,18 @@ const Footer = () => {
       whileInView={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
       viewport={{ once: true }}
-      className="bg-secondary text-[#94A3B8] border-t max-md:pb-20 pt-5 space-y-5"
+      className="bg-primary text-white border-t max-md:pb-20 pt-5 space-y-5"
     >
       <div className="container flex flex-col md:flex-row justify-between gap-10 py-10 px-4 mx-auto">
         <div className="flex-1 space-y-4">
           <div className="flex items-center gap-4">
             <Image
-              src={"/logo-icon.png"}
-              alt="Elena Store"
+              src={"/dark-text-logo.png"}
+              alt="Elwazeer Store"
               width={200}
               height={200}
-              className="size-20 object-contain"
+              className="w-40 object-contain"
             />
-            <h2 className="text-3xl font-black text-white">إلينا</h2>
           </div>
           <div className="flex items-center gap-2 max-w-xs">
             <p>
@@ -95,7 +94,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="space-y-4 flex-1">
-          <h2 className="text-lg font-medium text-primary">روابط سريعة</h2>
+          <h2 className="text-lg font-medium text-secondary">روابط سريعة</h2>
           <ul className="space-y-2">
             {quickLinks.map(({ title, href }) => (
               <li
@@ -109,7 +108,7 @@ const Footer = () => {
           </ul>
         </div>
         <div className="space-y-4 flex-1">
-          <h2 className="text-lg font-medium text-primary">معلومات</h2>
+          <h2 className="text-lg font-medium text-secondary">معلومات</h2>
           <ul className="space-y-2">
             {infoLinks.map(({ title, href }) => (
               <li
@@ -123,7 +122,7 @@ const Footer = () => {
           </ul>
         </div>
         <div className="space-y-4">
-          <h2 className="text-lg font-medium text-primary">تواصل معنا</h2>
+          <h2 className="text-lg font-medium text-secondary">تواصل معنا</h2>
           <ul className="flex items-center gap-2">
             {socialItems.map(({ Icon, href, style }) => (
               <li key={href}>
