@@ -1,17 +1,42 @@
 import FloatAdminNav from "@/components/FloatAdminNav";
+import FloatingWhatsapp from "@/components/FloatingWhatsapp";
+import FacebookPixel from "@/components/metadata/FacebookPixel";
 import TanstackQueryProvider from "@/components/providers/TanstackQueryProvider";
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
 import { Zain } from "next/font/google";
+import localFont from "next/font/local";
 import Script from "next/script";
 import "./globals.css";
-import FloatingWhatsapp from "@/components/FloatingWhatsapp";
-import FacebookPixel from "@/components/metadata/FacebookPixel";
-
 const rubik = Zain({
   variable: "--font-rubik",
   weight: ["200", "300", "400", "700", "800", "900"],
   subsets: ["latin", "arabic"],
+});
+const yearOfHandicrafts = localFont({
+  src: [
+    {
+      path: "../public/fonts/year-of-handicrafts/w-300.otf",
+      weight: "400",
+    },
+    {
+      path: "../public/fonts/year-of-handicrafts/w-500.otf",
+      weight: "500",
+    },
+    {
+      path: "../public/fonts/year-of-handicrafts/w-600.otf",
+      weight: "600",
+    },
+    {
+      path: "../public/fonts/year-of-handicrafts/w-700.otf",
+      weight: "700",
+    },
+    {
+      path: "../public/fonts/year-of-handicrafts/w-900.otf",
+      weight: "900",
+    },
+  ],
+  variable: "--font-year-of-handicrafts",
 });
 
 export const metadata: Metadata = {

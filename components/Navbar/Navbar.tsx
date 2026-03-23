@@ -118,7 +118,9 @@ const Navbar = () => {
                   <Link
                     className={`relative flex items-center text-lg font-medium transition-colors duration-300  px-4 py-2 ${
                       isActive
-                        ? "text-secondary"
+                        ? isScrolled
+                          ? "text-secondary"
+                          : "text-primary"
                         : isScrolled
                           ? "text-white hover:text-secondary"
                           : "text-gray-600 hover:text-primary"
@@ -129,7 +131,7 @@ const Navbar = () => {
                     {isActive && (
                       <motion.div
                         layoutId="nav-underline"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-secondary rounded-full mx-4"
+                        className={`absolute bottom-0 left-0 right-0 h-0.5 rounded-full mx-4 ${isScrolled ? "bg-secondary" : "bg-primary"}`}
                         transition={{
                           type: "spring",
                           stiffness: 380,
@@ -222,7 +224,7 @@ const Navbar = () => {
                 <DropdownMenu dir="rtl">
                   <DropdownMenuTrigger asChild className="outline-0">
                     <Button
-                      variant={isScrolled ? "secondary" : "default"}
+                      variant={isScrolled ? "outline" : "default"}
                       size={"icon-lg"}
                       className="rounded-full"
                     >
@@ -268,7 +270,7 @@ const Navbar = () => {
                 <Button
                   className="max-md:hidden rounded-full"
                   size={"icon-lg"}
-                  variant={"default"}
+                  variant={isScrolled ? "outline" : "default"}
                   asChild
                 >
                   <Link href={"/signin"}>
