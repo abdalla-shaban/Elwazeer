@@ -41,16 +41,15 @@ const yearOfHandicrafts = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: "Elena Store | ايلينا ستور",
-    template: "%s | Elena Store",
+    default: "Elwazeer Store | الوزير ستور",
+    template: "%s | Elwazeer Store",
   },
   description:
-    "ايلينا ستور تقدم الاجمل, الشارع السياحي مول مصباح الدور التالت محل ايلينا ستور",
+    "الوزير ستور تقدم الاجمل, الشارع السياحي مول مصباح الدور التالت محل الوزير ستور",
   robots: {
     index: true,
     follow: true,
   },
-  icons: { icon: "/webIcon.svg" },
   verification: {
     google: "DAKlgDDg8dKvXZoyHnMZ0zleLZF59UQtRF26TUbZT7Q",
     other: {
