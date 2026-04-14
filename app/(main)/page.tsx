@@ -1,12 +1,16 @@
 import CardsListSkeleton from "@/components/CardsListSkeleton";
-import Banner from "@/components/products/Banner";
+import ImmersiveHero from "@/components/home/ImmersiveHero";
+import BentoCategories from "@/components/home/BentoCategories";
+import GlassFeatureSection from "@/components/home/GlassFeatureSection";
 import ProductsList from "@/components/products/ProductsList";
 import ProductSlider from "@/components/products/ProductSlider";
 import { getProducts } from "@/lib/api";
 import { Headset, Truck, Verified } from "lucide-react";
 import { Metadata } from "next";
 import { Suspense } from "react";
-
+import Link from "next/link";
+import Image from "next/image";
+import * as motion from "motion/react-client";
 export const metadata: Metadata = {
   title: "الرئيسية",
   description:
@@ -30,24 +34,6 @@ export const metadata: Metadata = {
   },
 };
 
-const servicesContent = [
-  {
-    icon: Truck,
-    title: "شحن سريع وآمن",
-    desc: "نصلك أينما كنت في أسرع وقت ممكن وبكل عناية",
-  },
-  {
-    icon: Verified,
-    title: "جودة مضمونة 100%",
-    desc: "جميع منتجاتنا أصلية وتخضع لأعلى معايير الجودة",
-  },
-  {
-    icon: Headset,
-    title: "خدمة عملاء على مدار 24 ساعة",
-    desc: "فريق متخصص للرد على استفسارتكم ومساعدتكم",
-  },
-];
-
 export default async function Home({
   searchParams,
 }: {
@@ -66,54 +52,87 @@ export default async function Home({
     sort: string;
   }>;
 }) {
-  // Fetch products for sliders
-  const [bestSellers, latestProducts] = await Promise.all([
-    getProducts({ limit: 8, isAvailable: "true" }), // Using default sort for both as backend limit is 12 and default sort is latest
-    getProducts({ limit: 8, isAvailable: "true", category: "دريس" }), // Just to show different products for now
+  // Fetch products for different sections
+  const [bestSellers, latestProducts, featured3D] = await Promise.all([
+    getProducts({ limit: 8, isAvailable: "true", sort: "best_selling" }),
+    getProducts({ limit: 8, isAvailable: "true", sort: "latest" }),
+    getProducts({ limit: 8, isAvailable: "true", sort: "3d" }),
   ]);
 
   return (
-    <section>
-      <Banner />
-      <div className="container relative space-y-10 pt-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {servicesContent.map(({ icon: Icon, title, desc }) => (
-            <div
-              key={title}
-              className="space-y-4 text-center p-10 rounded-3xl bg-primary text-gray-300 border shadow"
-            >
-              <div className="size-14 mx-auto flex items-center justify-center rounded-lg bg-white/10">
-                <Icon className="size-10 text-secondary" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <h3 className="text-lg text-white font-medium">{title}</h3>
-                <p className="text-sm">{desc}</p>
-              </div>
-            </div>
-          ))}
+    <>
+      {/* 6. Custom Brand Banner */}
+      <section className="container mt-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="relative h-[200px] md:h-[400px] rounded-lg md:rounded-xl overflow-hidden group shadow-2xl shadow-primary/20"
+        >
+          <Link href="/store?productType=3d">
+            <Image
+              src="/newBanner.jpeg"
+              alt="Wazeer 3D Banner"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-1000"
+            />
+            <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-500" />
+          </Link>
+        </motion.div>
+      </section>
+
+      {/* 2. Brand Features (Glass Style) */}
+      <GlassFeatureSection />
+
+      <div className="space-y-32">
+        {/* 3. Featured 3D Abayas Section */}
+        {featured3D.data.length > 0 && (
+          <section className="relative">
+            <div className="absolute inset-0 bg-slate-50/50 -z-10 skew-y-1" />
+            <ProductSlider
+              title="مجموعة الـ 3D الفاخرة"
+              subtitle="تصاميم ثلاثية الأبعاد تأخذكِ لعالم من الأناقة والتميز"
+              products={featured3D.data}
+            />
+          </section>
+        )}
+
+        {/* 4. Bento Category Navigation */}
+        <BentoCategories />
+        {/* 5. Best Sellers */}
+        <div className="container">
+          <ProductSlider
+            title="الأكثر رواجاً"
+            subtitle="القطع التي عشقها الجميع وتصدرت مبيعاتنا"
+            products={bestSellers.data}
+          />
         </div>
 
-        <ProductSlider
-          title="الاكثر مبيعا"
-          subtitle="مجموعة من أرقى التصاميم التي لاقت استحسان الجميع"
-          products={bestSellers.data}
-        />
+        {/* 7. Latest Arrivals */}
+        <div className="container">
+          <ProductSlider
+            title="أحدث الإضافات"
+            subtitle="جديدنا لهذا الموسم، اختاري ما يناسب ذوقك الرفيع"
+            products={latestProducts.data}
+          />
+        </div>
 
-        <ProductSlider
-          title="أحدث المنتجات"
-          subtitle="استكشفي أحدث صيحات الموضة من تشكيلتنا الجديدة"
-          products={latestProducts.data}
-        />
-
-        <div className="space-y-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 border-r-4 border-primary pr-4">
-            تصفح جميع المنتجات
-          </h2>
+        {/* 8. Browse All Products with Infinite Scroll/Grid */}
+        <div className="container pb-24 space-y-12">
+          <div className="flex flex-col items-center text-center">
+            <h2 className="text-4xl font-black text-slate-900 mb-4 px-6 relative after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-20 after:h-1.5 after:bg-primary after:rounded-full pb-4">
+              اكتشفي تشكيلتنا الكاملة
+            </h2>
+            <p className="text-slate-500 font-medium">
+              كل ما تحتاجينه في مكان واحد
+            </p>
+          </div>
           <Suspense fallback={<CardsListSkeleton />}>
             <ProductsList searchParams={searchParams} />
           </Suspense>
         </div>
       </div>
-    </section>
+    </>
   );
 }

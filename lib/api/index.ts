@@ -253,6 +253,7 @@ export const getProducts = async ({
   size = "",
   sort = "",
   isAvailable = "",
+  productType = "",
 }: {
   page?: number;
   limit?: number;
@@ -267,10 +268,11 @@ export const getProducts = async ({
   q?: string;
   isAvailable?: boolean | string;
   sort?: string;
+  productType?: string;
 }): Promise<IProductsResponse> => {
   try {
     const res = await fetch(
-      `${BASE_URL}/products/?isAvailable=${isAvailable}&limit=${limit}&page=${page}&q=${q}&category=${category}&fabric=${fabric}&season=${season}&minPrice=${minPrice}&maxPrice=${maxPrice}&color=${color}&size=${size}&sort=${sort}`,
+      `${BASE_URL}/products/?isAvailable=${isAvailable}&limit=${limit}&page=${page}&q=${q}&category=${category}&fabric=${fabric}&season=${season}&minPrice=${minPrice}&maxPrice=${maxPrice}&color=${color}&size=${size}&sort=${sort}&productType=${productType}`,
       {
         cache: "no-store",
       },
