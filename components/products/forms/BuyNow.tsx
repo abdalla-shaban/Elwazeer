@@ -17,16 +17,16 @@ import { useBuyNow, useSettings } from "@/lib/api/hooks";
 import * as pixel from "@/lib/fbPixel";
 import { useOrderStore, useShippingPrice } from "@/store";
 import { Item } from "@/types/orders";
-import { Color, Product } from "@/types/productDetails";
-import { SizeDescription } from "@/types/products";
+import { Color, Product, Size } from "@/types/productDetails";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Palette } from "lucide-react";
+import { Loader2, Palette, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
+import { cn } from "@/lib/utils";
 
 type RawItem = Omit<Item, "productId"> & { productId: string };
 
@@ -55,7 +55,7 @@ const formSchema = z.object({
         hexCode: z.string(),
         _id: z.string().optional(),
         id: z.string().optional(),
-      })
+      }),
     )
     .min(1, "يجب اختيار لون"),
   sizes: z
@@ -64,7 +64,7 @@ const formSchema = z.object({
         size: z.string(),
         range: z.string(),
         _id: z.string().optional(),
-      })
+      }),
     )
     .min(1, "يجب اختيار مقاس"),
 });
@@ -80,7 +80,7 @@ const BuyNow = ({
   product: Product;
   setIsBuyNowSheetOpen: Dispatch<SetStateAction<boolean>>;
   defaultColor?: Color;
-  defaultSize?: any;
+  defaultSize?: Size;
 }) => {
   const { price: shippingPrice, setPrice } = useShippingPrice();
   const { mutateAsync: buyNow, isPending: isBuyNowPending } = useBuyNow();
@@ -90,9 +90,15 @@ const BuyNow = ({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     defaultValues: {
-      colors: defaultColor ? [defaultColor] : colors?.length > 0 ? [colors[0]] : [],
-      sizes: defaultSize ? [defaultSize] : [],
+      colors: defaultColor
+        ? [defaultColor]
+        : colors?.filter((c) => c.isAvailable).length > 0
+          ? [colors.filter((c) => c.isAvailable)[0]]
+          : [],
+      sizes: defaultSize && defaultSize.isAvailable ? [defaultSize] : [],
       address: "",
       building: "",
       city: "",
@@ -113,26 +119,33 @@ const BuyNow = ({
 
   const selectedColorHex = watchedColors?.[0]?.hexCode;
 
-  const availableSizes = useMemo(() => {
+  const currentSizes = useMemo(() => {
     if (!selectedColorHex || !product.colors) return [];
     const colorObj = product.colors.find((c) => c.hexCode === selectedColorHex);
     return colorObj?.sizes || [];
   }, [selectedColorHex, product.colors]);
+
+  const availableSizes = useMemo(() => {
+    return currentSizes.filter((s) => s.isAvailable);
+  }, [currentSizes]);
 
   // Sync size selection when color changes
   useEffect(() => {
     const currentSize = form.getValues("sizes")?.[0];
     if (currentSize && availableSizes.length > 0) {
       const isStillAvailable = availableSizes.find(
-        (s: any) =>
+        (s: Size) =>
           s._id === currentSize._id ||
-          (s.size === currentSize.size && s.range === currentSize.range)
+          (s.size === currentSize.size && s.range === currentSize.range),
       );
       if (!isStillAvailable) {
         form.setValue("sizes", [availableSizes[0]]);
       }
-    } else if (availableSizes.length > 0 && (!watchedColors || watchedColors.length === 0)) {
-       // if no color selected (shouldnt happen based on defaults)
+    } else if (
+      availableSizes.length > 0 &&
+      (!watchedColors || watchedColors.length === 0)
+    ) {
+      // if no color selected (shouldnt happen based on defaults)
     }
   }, [availableSizes, form]);
 
@@ -165,12 +178,12 @@ const BuyNow = ({
     const selectedSize = data.sizes[0];
 
     const productActiveColor = product.colors?.find(
-      (c) => c.hexCode === selectedColor.hexCode
+      (c) => c.hexCode === selectedColor.hexCode,
     );
     const productActiveSize = productActiveColor?.sizes?.find(
       (s) =>
         s._id === selectedSize._id ||
-        (s.size === selectedSize.size && s.range === selectedSize.range)
+        (s.size === selectedSize.size && s.range === selectedSize.range),
     );
     const sku = productActiveSize?.sku || "";
 
@@ -229,15 +242,14 @@ const BuyNow = ({
           return "تم اتمام الطلب بنجاح";
         },
         error: (err) => `حدث خطأ ما: ${err}`,
-      }
+      },
     );
   }
 
   const selectedImage =
     colors?.find((c) => c.hexCode === watchedColors?.[0]?.hexCode)?.images?.[0]
       ?.secure_url ||
-    product.image_preview?.secure_url ||
-    "";
+    "/demo.jpg";
 
   return (
     <div className="w-full">
@@ -254,7 +266,8 @@ const BuyNow = ({
             {product.name}
           </h3>
           <p className="text-primary font-black text-lg mt-1">
-            {product.finalPrice} <span className="text-xs text-slate-500">EGP</span>
+            {product.finalPrice}{" "}
+            <span className="text-xs text-slate-500">EGP</span>
           </p>
         </div>
       </div>
@@ -291,15 +304,22 @@ const BuyNow = ({
                           <FormControl>
                             <RadioGroupItem
                               value={color.hexCode}
+                              disabled={!color.isAvailable}
                               className="peer sr-only"
                             />
                           </FormControl>
                           <FormLabel
-                            className="flex size-10 cursor-pointer items-center justify-center rounded-full border-2 border-transparent bg-white shadow-sm ring-1 ring-slate-200 transition-all hover:scale-110 peer-data-[state=checked]:border-white peer-data-[state=checked]:ring-primary peer-data-[state=checked]:ring-2 peer-data-[state=checked]:scale-110"
+                            className={cn(
+                              "flex size-10 items-center justify-center rounded-full border-2 border-transparent bg-white shadow-sm ring-1 ring-slate-200 transition-all",
+                              color.isAvailable ? "cursor-pointer hover:scale-110 peer-data-[state=checked]:border-white peer-data-[state=checked]:ring-primary peer-data-[state=checked]:ring-2 peer-data-[state=checked]:scale-110" : "opacity-50 cursor-not-allowed"
+                            )}
                             style={{ backgroundColor: color.hexCode }}
                             title={color.name}
                           >
                             <span className="sr-only">{color.name}</span>
+                            {!color.isAvailable && (
+                              <X className="text-white drop-shadow-md size-6" />
+                            )}
                           </FormLabel>
                         </FormItem>
                       ))}
@@ -327,26 +347,40 @@ const BuyNow = ({
                       value={field.value?.[0]?._id}
                       onValueChange={(val) => {
                         const selected = availableSizes.find(
-                          (s: any) => s._id === val
+                          (s: Size) => s._id === val,
                         );
                         field.onChange(selected ? [selected] : []);
                       }}
                     >
-                      {availableSizes?.map(({ size, range, _id }: any) => (
+                      {currentSizes?.map((sizeObj: Size) => {
+                        const { size, range, _id, isAvailable } = sizeObj;
+                        return (
                         <FormItem key={_id}>
                           <FormControl>
-                            <RadioGroupItem value={_id!} className="peer sr-only" />
+                            <RadioGroupItem
+                              value={_id!}
+                              disabled={!isAvailable}
+                              className="peer sr-only"
+                            />
                           </FormControl>
-                          <FormLabel className="flex flex-col items-center justify-center min-w-[70px] px-3 py-2 cursor-pointer rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:border-primary/50 hover:bg-slate-50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 peer-data-[state=checked]:ring-1 peer-data-[state=checked]:ring-primary text-center">
-                            <span className="font-bold text-slate-800 border-b border-slate-200 pb-1 mb-1 w-full relative">
+                          <FormLabel className={cn(
+                            "relative overflow-hidden flex flex-col items-center justify-center min-w-[70px] px-3 py-2 rounded-xl border bg-white shadow-sm transition-all text-center",
+                            isAvailable 
+                              ? "cursor-pointer border-slate-200 hover:border-primary/50 hover:bg-slate-50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 peer-data-[state=checked]:ring-1 peer-data-[state=checked]:ring-primary" 
+                              : "opacity-50 cursor-not-allowed border-slate-200"
+                          )}>
+                            <span className="font-bold text-slate-800 border-b border-slate-200 pb-1 mb-1 w-full relative z-10">
                               {size}
                             </span>
-                            <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
+                            <span className="text-xs text-slate-500 font-medium whitespace-nowrap z-10">
                               {range}
                             </span>
+                            {!isAvailable && (
+                              <X className="absolute inset-0 m-auto text-slate-400 opacity-60 drop-shadow-sm size-8 z-0" />
+                            )}
                           </FormLabel>
                         </FormItem>
-                      ))}
+                      )})}
                     </RadioGroup>
                   </FormControl>
                   <FormMessage className="text-xs" />
@@ -360,13 +394,15 @@ const BuyNow = ({
             <h3 className="text-lg font-bold text-slate-800 mb-2 border-b border-slate-50 pb-3">
               بيانات المستلم
             </h3>
-            
+
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-slate-600 font-bold">الأسم بالكامل</FormLabel>
+                  <FormLabel className="text-slate-600 font-bold">
+                    الأسم بالكامل
+                  </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -385,7 +421,9 @@ const BuyNow = ({
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-600 font-bold">رقم الهاتف</FormLabel>
+                    <FormLabel className="text-slate-600 font-bold">
+                      رقم الهاتف
+                    </FormLabel>
                     <FormControl>
                       <Input
                         dir="rtl"
@@ -406,7 +444,10 @@ const BuyNow = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-slate-600 font-bold">
-                      رقم هاتف احتياطي <span className="text-xs font-normal text-slate-400">(اختياري)</span>
+                      رقم هاتف احتياطي{" "}
+                      <span className="text-xs font-normal text-slate-400">
+                        (اختياري)
+                      </span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -429,7 +470,10 @@ const BuyNow = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-slate-600 font-bold">
-                    البريد الإلكتروني <span className="text-xs font-normal text-slate-400">(اختياري)</span>
+                    البريد الإلكتروني{" "}
+                    <span className="text-xs font-normal text-slate-400">
+                      (اختياري)
+                    </span>
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -457,16 +501,19 @@ const BuyNow = ({
                 name="governorate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-600 font-bold">المحافظة</FormLabel>
+                    <FormLabel className="text-slate-600 font-bold">
+                      المحافظة
+                    </FormLabel>
                     <SearchableSelect
                       id="buy-now-governorate"
                       options={governorates}
                       value={field.value}
                       onChange={(value) => {
                         setPrice(
-                          settingsData?.settings.shippingRates[value] as number
+                          settingsData?.settings.shippingRates[value] as number,
                         );
                         field.onChange(value);
+                        form.clearErrors("governorate");
                       }}
                       placeholder="اختر المحافظة"
                       searchPlaceholder="ابحث..."
@@ -482,13 +529,18 @@ const BuyNow = ({
                 name="city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-600 font-bold">المدينة</FormLabel>
+                    <FormLabel className="text-slate-600 font-bold">
+                      المدينة
+                    </FormLabel>
                     <SearchableSelect
                       id="buy-now-city"
                       options={cities}
                       disabled={!watchedGovernorate}
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        form.clearErrors("city");
+                      }}
                       placeholder="اختر المدينة"
                       searchPlaceholder="ابحث..."
                       emptyMessage="لا توجد نتائج"
@@ -504,7 +556,9 @@ const BuyNow = ({
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-slate-600 font-bold">تفاصيل العنوان</FormLabel>
+                  <FormLabel className="text-slate-600 font-bold">
+                    تفاصيل العنوان
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
@@ -522,7 +576,9 @@ const BuyNow = ({
               name="building"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-slate-600 font-bold">رقم الشقة والدور</FormLabel>
+                  <FormLabel className="text-slate-600 font-bold">
+                    رقم الشقة والدور
+                  </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -541,7 +597,10 @@ const BuyNow = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-slate-600 font-bold">
-                    ملاحظات إضافية <span className="text-xs font-normal text-slate-400">(اختياري)</span>
+                    ملاحظات إضافية{" "}
+                    <span className="text-xs font-normal text-slate-400">
+                      (اختياري)
+                    </span>
                   </FormLabel>
                   <FormControl>
                     <Textarea
@@ -559,9 +618,11 @@ const BuyNow = ({
           <div className="bg-slate-50 p-5 rounded-3xl border border-slate-200 mt-8">
             <div className="flex justify-between items-center text-slate-600 mb-2">
               <span>سعر المنتج:</span>
-              <strong className="text-slate-800">{product.finalPrice} EGP</strong>
+              <strong className="text-slate-800">
+                {product.finalPrice} EGP
+              </strong>
             </div>
-            
+
             {shippingPrice !== 0 && (
               <div className="flex justify-between items-center text-slate-600 mb-3 pb-3 border-b border-slate-200">
                 <span>مصاريف الشحن:</span>
@@ -572,10 +633,11 @@ const BuyNow = ({
             <div className="flex justify-between items-center text-lg mt-3">
               <span className="font-bold text-slate-800">الإجمالي:</span>
               <strong className="font-black text-primary text-2xl">
-                {+product.finalPrice + shippingPrice} <span className="text-sm">EGP</span>
+                {+product.finalPrice + shippingPrice}{" "}
+                <span className="text-sm">EGP</span>
               </strong>
             </div>
-            
+
             <Button
               type="submit"
               size="lg"

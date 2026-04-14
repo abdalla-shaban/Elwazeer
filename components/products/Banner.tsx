@@ -22,7 +22,7 @@ const Banner = () => {
               viewport={{ once: true }}
             >
               <Image
-                src={"/banner.jpeg"}
+                src={"/newBanner.jpeg"}
                 width={1920}
                 height={1920}
                 alt="Banner"

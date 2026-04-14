@@ -26,6 +26,7 @@ const ProductsList = async ({
     q: (await searchParams).q || "",
     page: (await searchParams).page,
     isAvailable: "true",
+    sort: "oldest",
   });
   return (
     <section className="space-y-5">

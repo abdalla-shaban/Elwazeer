@@ -13,8 +13,8 @@ import { useAddToCart } from "@/lib/api/hooks";
 import * as pixel from "@/lib/fbPixel";
 import { Color, Product } from "@/types/productDetails";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader, ShoppingCart, CreditCard } from "lucide-react";
-import { useEffect, useState, useMemo } from "react";
+import { Loader, ShoppingCart, CreditCard, X as LucideX } from "lucide-react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -24,11 +24,19 @@ import BuyNow from "./forms/BuyNow";
 import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
-  colorId: z.string().nonempty("يجب اختيار لون"),
-  sizeId: z.string().nonempty("يجب اختيار مقاس"),
+  colorId: z.string().min(1, "يجب اختيار لون"),
+  sizeId: z.string().min(1, "يجب اختيار مقاس"),
 });
 
 type FormData = z.infer<typeof formSchema>;
+
+interface ProductDetailsFormActionsProps {
+  colors: Color[];
+  productId: string;
+  item: Product;
+  onColorChange?: (color: Color) => void;
+  selectedColor?: Color | null;
+}
 
 const ProductDetailsFormActions = ({
   colors,
@@ -36,25 +44,25 @@ const ProductDetailsFormActions = ({
   item,
   onColorChange,
   selectedColor: externalSelectedColor,
-}: {
-  colors: Color[];
-  productId: string;
-  item: Product;
-  onColorChange?: (color: Color) => void;
-  selectedColor?: Color | null;
-}) => {
+}: ProductDetailsFormActionsProps) => {
   const [isBuyNowSheetOpen, setIsBuyNowSheetOpen] = useState<boolean>(false);
   const { mutateAsync: addToCart, isPending: isAddingtoCartPending } =
     useAddToCart();
 
+  // Determine initial color and size
+  const initialColor = useMemo(() => {
+    return externalSelectedColor || colors.find((c) => c.isAvailable) || colors[0];
+  }, [externalSelectedColor, colors]);
+
+  const initialSize = useMemo(() => {
+    return initialColor?.sizes?.find((s) => s.isAvailable) || initialColor?.sizes?.[0];
+  }, [initialColor]);
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      colorId: externalSelectedColor?._id || colors?.[0]?._id || "",
-      sizeId:
-        externalSelectedColor?.sizes?.[0]?._id ||
-        colors?.[0]?.sizes?.[0]?._id ||
-        "",
+      colorId: initialColor?._id || "",
+      sizeId: initialSize?._id || "",
     },
   });
 
@@ -63,14 +71,30 @@ const ProductDetailsFormActions = ({
     name: "colorId",
   });
 
-  const selectedColor =
-    colors.find((c) => c._id === watchedColorId) || colors[0];
-  const availableSizes = useMemo(
-    () => selectedColor?.sizes || [],
-    [selectedColor],
+  // Derived state for the current full color object
+  const currentColor = useMemo(
+    () => colors.find((c) => c._id === watchedColorId) || initialColor,
+    [colors, watchedColorId, initialColor],
   );
 
-  // Update sizeId if current selection is not available in new color
+  const currentSizes = useMemo(
+    () => currentColor?.sizes || [],
+    [currentColor],
+  );
+
+  const availableSizes = useMemo(
+    () => currentSizes.filter((s) => s.isAvailable),
+    [currentSizes],
+  );
+
+  // Sync color from external change (e.g. gallery thumbnail click)
+  useEffect(() => {
+    if (externalSelectedColor && externalSelectedColor._id !== watchedColorId) {
+      form.setValue("colorId", externalSelectedColor._id);
+    }
+  }, [externalSelectedColor, watchedColorId, form]);
+
+  // Sync size when color changes
   useEffect(() => {
     const currentSizeId = form.getValues("sizeId");
     const stillAvailable = availableSizes.find((s) => s._id === currentSizeId);
@@ -79,13 +103,7 @@ const ProductDetailsFormActions = ({
     }
   }, [watchedColorId, availableSizes, form]);
 
-  useEffect(() => {
-    if (externalSelectedColor && externalSelectedColor._id !== watchedColorId) {
-      form.setValue("colorId", externalSelectedColor._id);
-    }
-  }, [externalSelectedColor, watchedColorId, form]);
-
-  function onSubmit(data: FormData) {
+  const handleAddToCart = useCallback((data: FormData) => {
     const color = colors.find((c) => c._id === data.colorId);
     const size = color?.sizes.find((s) => s._id === data.sizeId);
 
@@ -127,20 +145,27 @@ const ProductDetailsFormActions = ({
         error: (err) => `حدث خطأ ما: ${err}`,
       },
     );
-  }
+  }, [addToCart, productId, item, colors]);
+
+  const onFormSubmit = form.handleSubmit(handleAddToCart);
 
   return (
     <div className="space-y-10">
       <form
         id="add-to-cart-form"
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={onFormSubmit}
         className="space-y-8"
       >
         {/* COLOR SELECTION */}
-        <div className="space-y-4">
-          <label className="text-xl font-black text-slate-800">
-            الألوان المتوفرة:
-          </label>
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <label className="text-xl font-black text-slate-800">
+              الألوان المتوفرة:
+            </label>
+            <span className="text-sm font-bold text-primary bg-primary/5 px-3 py-1 rounded-full">
+              {currentColor?.name}
+            </span>
+          </div>
           <Controller
             name="colorId"
             control={form.control}
@@ -160,18 +185,25 @@ const ProductDetailsFormActions = ({
                       value={color._id}
                       id={`color-${color._id}`}
                       className="sr-only"
+                      disabled={!color.isAvailable}
                     />
                     <label
                       htmlFor={`color-${color._id}`}
                       className={cn(
-                        "block size-12 rounded-full cursor-pointer border-4 transition-all duration-300 ring-offset-2 hover:scale-110",
-                        field.value === color._id
+                        "relative flex size-12 items-center justify-center rounded-full border-4 transition-all duration-300 ring-offset-2",
+                        color.isAvailable ? "cursor-pointer hover:scale-110" : "opacity-50 cursor-not-allowed",
+                        field.value === color._id && color.isAvailable
                           ? "border-white ring-2 ring-primary scale-110 shadow-lg"
                           : "border-transparent ring-0",
+                        color.isAvailable && field.value !== color._id && "hover:ring-2 hover:ring-slate-200"
                       )}
                       style={{ backgroundColor: color.hexCode }}
                       title={color.name}
-                    />
+                    >
+                      {!color.isAvailable && (
+                        <LucideX className="absolute inset-0 m-auto text-white drop-shadow-md size-6" />
+                      )}
+                    </label>
                   </div>
                 ))}
               </RadioGroup>
@@ -180,7 +212,7 @@ const ProductDetailsFormActions = ({
         </div>
 
         {/* SIZE SELECTION */}
-        <div className="space-y-4">
+        <div className="space-y-5">
           <label className="text-xl font-black text-slate-800">
             الأحجام المتوفرة:
           </label>
@@ -193,40 +225,53 @@ const ProductDetailsFormActions = ({
                 value={field.value}
                 onValueChange={field.onChange}
               >
-                {availableSizes.map((size) => (
-                  <div key={size._id} className="flex-1 min-w-[140px]">
-                    <RadioGroupItem
-                      value={size._id}
-                      id={`size-${size._id}`}
-                      className="sr-only"
-                    />
-                    <label
-                      htmlFor={`size-${size._id}`}
-                      className={cn(
-                        "flex flex-col items-center justify-center p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 hover:bg-slate-50",
-                        field.value === size._id
-                          ? "border-primary bg-primary/5 shadow-md scale-[1.02]"
-                          : "border-slate-200 bg-white",
-                      )}
-                    >
-                      <span
+                {currentSizes.length > 0 ? (
+                  currentSizes.map((size) => (
+                    <div key={size._id} className="relative flex-1 min-w-[120px]">
+                      <RadioGroupItem
+                        value={size._id}
+                        id={`size-${size._id}`}
+                        disabled={!size.isAvailable}
+                        className="sr-only"
+                      />
+                      <label
+                        htmlFor={`size-${size._id}`}
                         className={cn(
-                          "text-lg font-black transition-colors",
-                          field.value === size._id
-                            ? "text-primary"
-                            : "text-slate-800",
+                          "relative overflow-hidden flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300",
+                          size.isAvailable 
+                            ? "cursor-pointer hover:bg-slate-50" 
+                            : "opacity-50 cursor-not-allowed border-slate-200 bg-slate-50/50",
+                          field.value === size._id && size.isAvailable
+                            ? "border-primary bg-primary/5 shadow-md scale-[1.02]"
+                            : "border-slate-200 bg-white"
                         )}
                       >
-                        {size.size}
-                      </span>
-                      {size.range && (
-                        <span className="text-xs text-slate-500 font-medium text-center mt-1">
-                          {size.range}
+                        <span
+                          className={cn(
+                            "text-lg font-black transition-colors relative z-10",
+                            field.value === size._id && size.isAvailable
+                              ? "text-primary"
+                              : "text-slate-800",
+                          )}
+                        >
+                          {size.size}
                         </span>
-                      )}
-                    </label>
+                        {size.range && (
+                          <span className="text-xs text-slate-500 font-medium text-center mt-1 relative z-10">
+                            {size.range}
+                          </span>
+                        )}
+                        {!size.isAvailable && (
+                          <LucideX className="absolute inset-0 m-auto text-slate-400 opacity-30 drop-shadow-sm size-10 z-0" />
+                        )}
+                      </label>
+                    </div>
+                  ))
+                ) : (
+                  <div className="w-full p-4 rounded-xl bg-orange-50 border border-orange-100 text-orange-600 font-bold text-center">
+                    لا توجد أحجام متوفرة لهذا اللون حالياً
                   </div>
-                ))}
+                )}
               </RadioGroup>
             )}
           />
@@ -247,14 +292,14 @@ const ProductDetailsFormActions = ({
           </SheetTrigger>
           <SheetContent
             side="bottom"
-            className="h-[90vh] rounded-t-[3rem] overflow-y-auto no-scrollbar pt-10 px-6"
+            className="h-[95vh] rounded-t-[3rem] overflow-y-auto no-scrollbar pt-10 px-6"
           >
             <div className="max-w-2xl mx-auto space-y-8">
               <SheetHeader>
                 <SheetTitle className="text-3xl font-black text-center">
                   أكمل طلبك الآن
                 </SheetTitle>
-                <SheetDescription className="text-center text-lg">
+                <SheetDescription className="text-center text-lg font-medium">
                   أدخل بياناتك لإتمام الشراء بسرعة وسهولة
                 </SheetDescription>
               </SheetHeader>
@@ -263,7 +308,7 @@ const ProductDetailsFormActions = ({
                 colors={colors}
                 product={item}
                 setIsBuyNowSheetOpen={setIsBuyNowSheetOpen}
-                defaultColor={selectedColor}
+                defaultColor={currentColor || undefined}
                 defaultSize={availableSizes.find(
                   (s) => s._id === form.getValues("sizeId"),
                 )}
@@ -291,3 +336,4 @@ const ProductDetailsFormActions = ({
 };
 
 export default ProductDetailsFormActions;
+

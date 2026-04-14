@@ -22,7 +22,7 @@ const FloatAdminNav = () => {
     return null;
   return (
     <div className="fixed rounded-lg bottom-20 z-9999999 md:bottom-5 left-5 md:left-10">
-      <Button className="size-14 rounded-full" variant={"secondary"} asChild>
+      <Button className="size-14 rounded-full" asChild>
         <Link
           href={
             userData?.data?.role !== "ADMIN"

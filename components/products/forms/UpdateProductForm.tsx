@@ -1,33 +1,35 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect } from "react";
 import {
-  useFieldArray,
-  Controller,
-  useForm,
-  useWatch,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  CloudUpload,
+  Layers,
+  Loader,
+  Palette,
+  Plus,
+  Settings2,
+  Tag,
+  Trash2,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import {
   Control,
+  Controller,
   Path,
   Resolver,
+  useFieldArray,
+  useForm,
+  useWatch,
+  useFormState,
 } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
-import {
-  Plus,
-  Trash2,
-  ChevronRight,
-  ChevronLeft,
-  Check,
-  Layers,
-  Palette,
-  CloudUpload,
-  Loader,
-  Settings2,
-  Tag,
-} from "lucide-react";
 
 import { KeywordsInput } from "@/components/custom/KeywordsInput";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,12 +39,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-  FieldDescription,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -55,7 +52,6 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { convertToBase64, seasons } from "@/constants";
 import {
   useCurrentUser,
@@ -65,6 +61,7 @@ import {
 } from "@/lib/api/hooks";
 import { IProductBody, IProductImage } from "@/types/products";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 // --- Schemas ---
 
@@ -72,7 +69,14 @@ export const colorSchema = z.object({
   _id: z.string().optional(),
   name: z.string().min(1, "اسم اللون مطلوب"),
   hexCode: z.string().min(1, "كود اللون مطلوب"),
-  images: z.array(z.union([z.string(), z.object({ secure_url: z.string(), public_id: z.string() })])).min(1, "يجب رفع صورة واحدة على الأقل لهذا اللون"),
+  images: z
+    .array(
+      z.union([
+        z.string(),
+        z.object({ secure_url: z.string(), public_id: z.string() }),
+      ]),
+    )
+    .min(1, "يجب رفع صورة واحدة على الأقل لهذا اللون"),
   sizes: z
     .array(
       z.object({
@@ -88,6 +92,7 @@ export const colorSchema = z.object({
       }),
     )
     .min(1, "يجب إضافة مقاس واحد على الأقل لهذا اللون"),
+  isAvailable: z.boolean().default(true),
 });
 
 export const formSchema = z.object({
@@ -97,10 +102,12 @@ export const formSchema = z.object({
     .min(2, "اسم المنتج لا يقل عن حرفين")
     .max(200, "اسم المنتج لا يزيد عن 200 حرف")
     .nonempty("اسم المنتج مطلوب"),
-  image_preview: z.union([z.string(), z.object({ secure_url: z.string() })]).refine(val => {
-    if (typeof val === "string") return val.length > 0;
-    return val.secure_url.length > 0;
-  }, "صورة المنتج الأساسية مطلوبة"),
+  image_preview: z
+    .union([z.string(), z.object({ secure_url: z.string() })])
+    .refine((val) => {
+      if (typeof val === "string") return val.length > 0;
+      return val.secure_url.length > 0;
+    }, "صورة المنتج الأساسية مطلوبة"),
   price: z.coerce.number().min(1, "السعر مطلوب"),
   category: z.string().nonempty("قسم المنتج مطلوب"),
   fabric: z.string().nonempty("خامة المنتج مطلوبة"),
@@ -154,6 +161,12 @@ function ColorVariant({
     name: `colors.${index}.sizes`,
   }) as FormData["colors"][0]["sizes"];
 
+  const { errors } = useFormState({ control });
+  const sizesError = errors?.colors?.[index]?.sizes;
+  const sizesRootError = !Array.isArray(sizesError)
+    ? sizesError?.message
+    : (sizesError as { root?: { message?: string } })?.root?.message;
+
   return (
     <Card className="border-2 border-muted bg-muted/30 mb-6 overflow-hidden transition-all hover:border-primary/20">
       <CardHeader className="bg-muted/50 py-3 flex flex-row items-center justify-between gap-4">
@@ -174,16 +187,38 @@ function ColorVariant({
             )}
           />
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => remove(index)}
-          className="text-destructive hover:bg-destructive/10 shrink-0"
-        >
-          <Trash2 className="w-4 h-4 md:ml-2" />
-          <span className="hidden md:inline">حذف هذا اللون</span>
-        </Button>
+        <div className="flex items-center gap-4">
+          <Controller
+            name={`colors.${index}.isAvailable`}
+            control={control}
+            render={({ field }) => (
+              <div className="flex items-center gap-2 bg-background/50 px-3 py-1 rounded-full border">
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  id={`color-available-${index}`}
+                />
+                <FieldLabel
+                  htmlFor={`color-available-${index}`}
+                  className="text-[10px] md:text-xs mt-0 whitespace-nowrap cursor-pointer font-bold"
+                >
+                  {field.value ? "اللون متاح" : "اللون غير متاح"}
+                </FieldLabel>
+              </div>
+            )}
+          />
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => remove(index)}
+            className="text-destructive hover:bg-destructive/10 shrink-0"
+          >
+            <Trash2 className="w-4 h-4 md:ml-2" />
+            <span className="hidden md:inline">حذف هذا اللون</span>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="pt-6">
         <div className="grid md:grid-cols-2 gap-6 mb-6">
@@ -192,7 +227,7 @@ function ColorVariant({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>اسم اللون (مثلاً: أسود، أحمر)</FieldLabel>
+                <FieldLabel>اسم اللون (مثلاً: أسود، أحمر) <span className="text-destructive">*</span></FieldLabel>
                 <Input {...field} placeholder="ادخل اسم اللون" />
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
@@ -227,7 +262,7 @@ function ColorVariant({
 
         <div className="mb-6">
           <FieldLabel className="mb-3 block text-lg font-medium">
-            صور هذا اللون
+            صور هذا اللون <span className="text-destructive">*</span>
           </FieldLabel>
           <Controller
             name={`colors.${index}.images`}
@@ -235,34 +270,37 @@ function ColorVariant({
             render={({ field, fieldState }) => (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {field.value?.map((img: string | IProductImage, imgIdx: number) => {
-                    const src = typeof img === "string" ? img : img.secure_url;
-                    return (
-                      <div
-                        key={imgIdx}
-                        className="relative aspect-square rounded-lg border-2 border-muted overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <Image
-                          src={src}
-                          alt="preview"
-                          width={300}
-                          height={300}
-                          className="w-full h-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newImages = [...field.value];
-                            newImages.splice(imgIdx, 1);
-                            field.onChange(newImages);
-                          }}
-                          className="absolute top-1 right-1 bg-destructive/90 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
+                  {field.value?.map(
+                    (img: string | IProductImage, imgIdx: number) => {
+                      const src =
+                        typeof img === "string" ? img : img.secure_url;
+                      return (
+                        <div
+                          key={imgIdx}
+                          className="relative aspect-square rounded-lg border-2 border-muted overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    );
-                  })}
+                          <Image
+                            src={src}
+                            alt="preview"
+                            width={300}
+                            height={300}
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newImages = [...field.value];
+                              newImages.splice(imgIdx, 1);
+                              field.onChange(newImages);
+                            }}
+                            className="absolute top-1 right-1 bg-destructive/90 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      );
+                    },
+                  )}
                   <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-primary/30 rounded-lg cursor-pointer hover:bg-primary/5 transition-all hover:border-primary">
                     <CloudUpload className="w-8 h-8 text-primary mb-2" />
                     <span className="text-xs text-muted-foreground font-medium">
@@ -297,7 +335,7 @@ function ColorVariant({
         <div>
           <div className="flex items-center justify-between mb-4">
             <FieldLabel className="text-lg font-medium">
-              المقاسات المتاحة لهذا اللون
+              المقاسات المتاحة لهذا اللون <span className="text-destructive">*</span>
             </FieldLabel>
             <Button
               type="button"
@@ -375,26 +413,52 @@ function ColorVariant({
                   <Controller
                     name={`colors.${index}.sizes.${sizeIdx}.size`}
                     control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel className="text-xs">المقاس</FieldLabel>
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel className="text-xs">المقاس <span className="text-destructive">*</span></FieldLabel>
                         <Input {...field} size={1} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
                   <Controller
                     name={`colors.${index}.sizes.${sizeIdx}.range`}
                     control={control}
-                    render={({ field }) => (
-                      <Field>
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
                         <FieldLabel className="text-xs">
                           الأبعاد (اختياري)
                         </FieldLabel>
                         <Input {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
                   <div className="flex items-center gap-4 h-10 md:pt-4">
+                    <Controller
+                      name={`colors.${index}.sizes.${sizeIdx}.isAvailable`}
+                      control={control}
+                      render={({ field }) => (
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            id={`isAvailable-${index}-${sizeIdx}`}
+                          />
+                          <FieldLabel
+                            htmlFor={`isAvailable-${index}-${sizeIdx}`}
+                            className="text-xs mt-0 cursor-pointer"
+                          >
+                            متاح
+                          </FieldLabel>
+                        </div>
+                      )}
+                    />
+                    <div className="w-px h-6 bg-muted self-center" />
                     <Controller
                       name={`colors.${index}.sizes.${sizeIdx}.manageStock`}
                       control={control}
@@ -407,7 +471,7 @@ function ColorVariant({
                           />
                           <FieldLabel
                             htmlFor={`manageStock-${index}-${sizeIdx}`}
-                            className="text-xs mt-0"
+                            className="text-xs mt-0 cursor-pointer"
                           >
                             مخزون
                           </FieldLabel>
@@ -418,16 +482,20 @@ function ColorVariant({
                   <Controller
                     name={`colors.${index}.sizes.${sizeIdx}.stock`}
                     control={control}
-                    render={({ field }) => {
+                    render={({ field, fieldState }) => {
                       const manage = sizes?.[sizeIdx]?.manageStock;
                       return (
                         <Field
                           data-slot="stock-field"
+                          data-invalid={fieldState.invalid}
                           data-disabled={!manage}
                           className={!manage ? "opacity-50" : ""}
                         >
                           <FieldLabel className="text-xs">الكمية</FieldLabel>
                           <Input {...field} type="number" disabled={!manage} />
+                          {fieldState.invalid && manage && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
                         </Field>
                       );
                     }}
@@ -444,6 +512,11 @@ function ColorVariant({
                 </Button>
               </div>
             ))}
+            {sizesRootError && (
+              <p className="text-sm font-semibold text-destructive mt-2">
+                {sizesRootError}
+              </p>
+            )}
           </div>
         </div>
       </CardContent>
@@ -459,6 +532,7 @@ const seasonMap: Record<string, string> = {
 };
 
 const UpdateProductForm = ({ slug }: { slug: string }) => {
+  const router = useRouter();
   const { data: userData, isLoading: isUserDataLoading } = useCurrentUser();
   const [step, setStep] = useState(1);
 
@@ -474,6 +548,7 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema) as Resolver<FormData>,
+    mode: "onChange",
     defaultValues: {
       name: "",
       image_preview: "",
@@ -530,6 +605,7 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
           name: c.name,
           hexCode: c.hexCode,
           images: c.images || [],
+          isAvailable: c.isAvailable ?? true,
           sizes: c.sizes.map((s) => ({
             _id: s._id,
             size: s.size,
@@ -549,7 +625,7 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
     // Transform back to backend format
     const body: IProductBody = {
       ...data,
-      // If image_preview is a base64 string, keep it. 
+      // If image_preview is a base64 string, keep it.
       // If it's the original object, the IProductBody handles it.
       image_preview: data.image_preview,
     };
@@ -562,6 +638,7 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
       {
         loading: `جاري تحديث المنتج...`,
         success: () => {
+          router.push("/admin/products");
           return `تم التحديث بنجاح!`;
         },
         error: (err) => `حدث خطأ ما! ${err}`,
@@ -682,12 +759,16 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   render={({ field, fieldState }) => (
                     <div className="flex flex-col items-center gap-4 w-full">
                       <FieldLabel className="text-lg font-bold">
-                        الصورة المصغرة للمنتج (Preview)
+                        الصورة المصغرة للمنتج (Preview) <span className="text-destructive">*</span>
                       </FieldLabel>
                       {field.value ? (
                         <div className="relative group size-48 rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
                           <Image
-                            src={typeof field.value === "string" ? field.value : field.value.secure_url}
+                            src={
+                              typeof field.value === "string"
+                                ? field.value
+                                : field.value.secure_url
+                            }
                             alt="preview"
                             width={200}
                             height={200}
@@ -735,7 +816,7 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel className="text-base">اسم المنتج</FieldLabel>
+                      <FieldLabel className="text-base">اسم المنتج <span className="text-destructive">*</span></FieldLabel>
                       <Input
                         {...field}
                         placeholder="مثال: عباية كريب ملكي"
@@ -754,7 +835,7 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel className="text-base">
-                        السعر الأساسي
+                        السعر الأساسي <span className="text-destructive">*</span>
                       </FieldLabel>
                       <div className="relative">
                         <Input
@@ -781,9 +862,10 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>القسم</FieldLabel>
+                      <FieldLabel>القسم <span className="text-destructive">*</span></FieldLabel>
                       <Select
                         value={field.value}
+                        key={field.value}
                         onValueChange={field.onChange}
                         dir="rtl"
                       >
@@ -814,10 +896,11 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>الخامة</FieldLabel>
+                      <FieldLabel>الخامة <span className="text-destructive">*</span></FieldLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
+                        key={field.value}
                         dir="rtl"
                       >
                         <SelectTrigger className="h-12">
@@ -847,10 +930,11 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>الموسم</FieldLabel>
+                      <FieldLabel>الموسم <span className="text-destructive">*</span></FieldLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
+                        key={field.value}
                         dir="rtl"
                       >
                         <SelectTrigger className="h-12">
@@ -884,8 +968,6 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   )}
                 />
               </div>
-
-
             </div>
           )}
 
@@ -905,6 +987,7 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                       hexCode: "#000000",
                       images: [],
                       sizes: [],
+                      isAvailable: true,
                     })
                   }
                   className="bg-primary hover:bg-primary/90 shadow-md"
@@ -934,6 +1017,11 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                       يجب إضافة لون واحد على الأقل للمنتج
                     </p>
                   </div>
+                )}
+                {form.formState.errors.colors?.message && (
+                  <p className="text-destructive font-bold text-center mt-4">
+                    {form.formState.errors.colors.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -1040,8 +1128,6 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                     </Field>
                   )}
                 />
-
-
               </div>
             </div>
           )}
@@ -1074,7 +1160,6 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
           </Button>
         )}
         {step === 3 && (
-          (
           <Button
             disabled={isUpdateProductPending}
             type="submit"
@@ -1093,7 +1178,6 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
               </>
             )}
           </Button>
-        )
         )}
       </CardFooter>
     </Card>

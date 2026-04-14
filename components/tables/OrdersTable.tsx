@@ -33,7 +33,7 @@ import {
   useUpdateOrderStatus,
   useUpdateQuery,
 } from "@/lib/api/hooks";
-import { Order } from "@/types/orders";
+import { Item, Order, ProductId } from "@/types/orders";
 import {
   ChevronLeft,
   ChevronRight,
@@ -106,7 +106,7 @@ const generateOrderPrintHTML = (order: Order) => `
       <img src="/logo-icon.png" alt="Elena Store Logo" />
     </div>
     <div class="order-header">
-      <h2>ايلينا ستور</h2>
+      <h2>إلينا ستور</h2>
       <p>رقم الطلب: ${order._id.slice(-6).toUpperCase()}</p>
       <p>التاريخ: ${new Date(order.createdAt).toLocaleDateString("ar-EG")}</p>
     </div>
@@ -129,13 +129,20 @@ const generateOrderPrintHTML = (order: Order) => `
       </thead>
       <tbody>
         ${order.items
-          .map(
-            (item: any) => {
-              const itemName = item.name || item.productId?.name || "Product";
-              const itemSize = item.size?.size ? `${item.size.size} ${item.size.range || ''}` : item.size;
-              const itemColor = Array.isArray(item.color) ? item.color[0]?.name : (item.color?.name || item.color);
-              const itemPrice = item.price || item.finalPrice || 0;
-              return `
+          .map((item: Item) => {
+            const itemName =
+              item.name || (item.productId as ProductId)?.name || "Product";
+            const itemSize =
+              typeof item.size === "object" && item.size?.size
+                ? `${item.size.size} ${item.size.range || ""}`
+                : item.size;
+            const itemColor = Array.isArray(item.color)
+              ? item.color[0]?.name
+              : typeof item.color === "object" && item.color?.name
+                ? item.color.name
+                : item.color;
+            const itemPrice = item.price || item.finalPrice || 0;
+            return `
           <tr>
             <td>${itemName}</td>
             <td>${itemSize}</td>
@@ -144,8 +151,7 @@ const generateOrderPrintHTML = (order: Order) => `
             <td>${itemPrice} EGP</td>
           </tr>
         `;
-            }
-          )
+          })
           .join("")}
       </tbody>
     </table>
@@ -247,20 +253,29 @@ export const OrdersTable = () => {
   );
   const buildWhatsAppMessage = (order: Order) => {
     const itemsText = order.items
-      .map((item: any) => {
-        const itemName = item.name || item.productId?.name || "Product";
-        const itemSize = item.size?.size ? item.size.size : item.size;
-        const itemColor = Array.isArray(item.color) ? item.color[0]?.name : (item.color?.name || item.color);
+      .map((item: Item) => {
+        const itemName =
+          item.name || (item.productId as ProductId)?.name || "Product";
+        const itemSize =
+          typeof item.size === "object" && item.size?.size
+            ? item.size.size
+            : item.size;
+        const itemColor = Array.isArray(item.color)
+          ? item.color[0]?.name
+          : typeof item.color === "object" && item.color?.name
+            ? item.color.name
+            : item.color;
         const itemPrice = item.price || item.finalPrice || 0;
         return `- ${itemName}
   • المقاس: ${itemSize}
   • اللون: ${itemColor}
   • الكمية: ${item.quantity}
-  • السعر: ${itemPrice} جنيه`
-      }).join("\n");
+  • السعر: ${itemPrice} جنيه`;
+      })
+      .join("\n");
 
     const message = `
- اهلاً بك في يارا ستور
+ اهلاً بك في الينا ستور
 
  الاسم: ${order.shipping.name}
  الهاتف: ${order.shipping.phone}
@@ -326,11 +341,19 @@ ${itemsText}
         Quantity: "",
         "Item Description":
           order.items
-            .map((item: any) => {
-              const itemName = item.name || item.productId?.name || "Product";
-              const itemSize = item.size?.size ? `${item.size.size} - ${item.size.range || ''}` : item.size;
-              const itemColor = Array.isArray(item.color) ? item.color[0]?.name : (item.color?.name || item.color);
-              
+            .map((item: Item) => {
+              const itemName =
+                item.name || (item.productId as ProductId)?.name || "Product";
+              const itemSize =
+                typeof item.size === "object" && item.size?.size
+                  ? `${item.size.size} - ${item.size.range || ""}`
+                  : item.size;
+              const itemColor = Array.isArray(item.color)
+                ? item.color[0]?.name
+                : typeof item.color === "object" && item.color?.name
+                  ? item.color.name
+                  : item.color;
+
               return `الاسم: ${itemName}\nاللون: ${itemColor}\nالمقاس: ${itemSize} \nالكمية: ${item.quantity}`;
             })
             .join(" | ") + "\n",
@@ -339,7 +362,19 @@ ${itemsText}
         Size: "",
         "Service Type": "",
         notes: order.items
-          .map((item: any) => item.image || item.productId?.images?.[0]?.secure_url || "")
+          .map((item: Item) => {
+            const imgUrl =
+              typeof item.image === "object" && item.image !== null
+                ? item.image.secure_url
+                : typeof item.image === "string"
+                  ? item.image
+                  : "";
+            return (
+              imgUrl ||
+              (item.productId as ProductId)?.images?.[0]?.secure_url ||
+              ""
+            );
+          })
           .filter(Boolean)
           .join(", "),
       };
@@ -572,14 +607,30 @@ ${itemsText}
                   onCheckedChange={toggleAll}
                 />
               </TableHead>
-              <TableHead className="text-right font-bold text-slate-700">العميل</TableHead>
-              <TableHead className="text-right font-bold text-slate-700">المحافظة</TableHead>
-              <TableHead className="text-center font-bold text-slate-700">العدد</TableHead>
-              <TableHead className="text-center font-bold text-slate-700">الإجمالي</TableHead>
-              <TableHead className="text-center font-bold text-slate-700">الدفع</TableHead>
-              <TableHead className="text-center font-bold text-slate-700">الحالة</TableHead>
-              <TableHead className="text-center font-bold text-slate-700">تاريخ التحديث</TableHead>
-              <TableHead className="text-center font-bold text-slate-700">تاريخ الإنشاء</TableHead>
+              <TableHead className="text-right font-bold text-slate-700">
+                العميل
+              </TableHead>
+              <TableHead className="text-right font-bold text-slate-700">
+                المحافظة
+              </TableHead>
+              <TableHead className="text-center font-bold text-slate-700">
+                العدد
+              </TableHead>
+              <TableHead className="text-center font-bold text-slate-700">
+                الإجمالي
+              </TableHead>
+              <TableHead className="text-center font-bold text-slate-700">
+                الدفع
+              </TableHead>
+              <TableHead className="text-center font-bold text-slate-700">
+                الحالة
+              </TableHead>
+              <TableHead className="text-center font-bold text-slate-700">
+                تاريخ التحديث
+              </TableHead>
+              <TableHead className="text-center font-bold text-slate-700">
+                تاريخ الإنشاء
+              </TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -606,33 +657,20 @@ ${itemsText}
                     transition={{ delay: (index % 15) * 0.05, duration: 0.3 }}
                     className="border-b transition-colors hover:bg-slate-50/80 data-[state=selected]:bg-muted"
                   >
-                  <TableCell className="text-center">
-                    <Checkbox
-                      className="cursor-pointer"
-                      checked={selectedOrders.includes(order._id)}
-                      onCheckedChange={() => toggleOrder(order._id)}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <div className="space-y-2">
-                      <p className="capitalize">{order.shipping.name}</p>
-                      <div className="flex flex-col items-start gap-2">
-                        <Link
-                          href={`https://wa.me/+20${
-                            order.shipping.phone
-                          }?text=${buildWhatsAppMessage(order)}`}
-                          target="_blank"
-                          className="flex w-fit px-4 justify-center items-center gap-2 py-1.5 rounded-full bg-black/5 backdrop-blur-md"
-                        >
-                          <p className="text-sm text-muted-foreground">
-                            {order.shipping.phone}
-                          </p>
-                          <BsWhatsapp className="text-green-700" />
-                        </Link>
-                        {order.shipping.phone2 ? (
+                    <TableCell className="text-center">
+                      <Checkbox
+                        className="cursor-pointer"
+                        checked={selectedOrders.includes(order._id)}
+                        onCheckedChange={() => toggleOrder(order._id)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      <div className="space-y-2">
+                        <p className="capitalize">{order.shipping.name}</p>
+                        <div className="flex flex-col items-start gap-2">
                           <Link
                             href={`https://wa.me/+20${
-                              order.shipping.phone2
+                              order.shipping.phone
                             }?text=${buildWhatsAppMessage(order)}`}
                             target="_blank"
                             className="flex w-fit px-4 justify-center items-center gap-2 py-1.5 rounded-full bg-black/5 backdrop-blur-md"
@@ -642,100 +680,113 @@ ${itemsText}
                             </p>
                             <BsWhatsapp className="text-green-700" />
                           </Link>
-                        ) : null}
+                          {order.shipping.phone2 ? (
+                            <Link
+                              href={`https://wa.me/+20${
+                                order.shipping.phone2
+                              }?text=${buildWhatsAppMessage(order)}`}
+                              target="_blank"
+                              className="flex w-fit px-4 justify-center items-center gap-2 py-1.5 rounded-full bg-black/5 backdrop-blur-md"
+                            >
+                              <p className="text-sm text-muted-foreground">
+                                {order.shipping.phone}
+                              </p>
+                              <BsWhatsapp className="text-green-700" />
+                            </Link>
+                          ) : null}
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
+                    </TableCell>
 
-                  <TableCell>
-                    {order.shipping.governorate} - {order.shipping.city}
-                  </TableCell>
+                    <TableCell>
+                      {order.shipping.governorate} - {order.shipping.city}
+                    </TableCell>
 
-                  <TableCell className="text-center">
-                    {order.items.length}
-                  </TableCell>
+                    <TableCell className="text-center">
+                      {order.items.length}
+                    </TableCell>
 
-                  <TableCell className="text-center">
-                    {order.totalPrice} EGP
-                  </TableCell>
+                    <TableCell className="text-center">
+                      {order.totalPrice} EGP
+                    </TableCell>
 
-                  <TableCell className="text-center">
-                    <Badge variant="outline">{order.payment.method}</Badge>
-                  </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline">{order.payment.method}</Badge>
+                    </TableCell>
 
-                  <TableCell className="text-center">
-                    {order.status === "delivered" ? (
-                      <Badge
-                        className="cursor-pointer"
-                        onClick={() => {
-                          toast.warning("لا يمكن التغيير في هذة الحالة");
-                        }}
-                        variant={detectCurrentBadgeColor(order.status)}
-                      >
-                        {detectCurrentStatus(order.status)?.lable}
-                      </Badge>
-                    ) : (
-                      <DropdownMenu dir="rtl">
-                        <DropdownMenuTrigger asChild>
-                          <Badge
-                            className="cursor-pointer"
-                            variant={detectCurrentBadgeColor(order.status)}
-                          >
-                            {detectCurrentStatus(order.status)?.lable}
-                          </Badge>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="space-y-2">
-                          {OrderStatus.map(({ value }) => (
-                            <DropdownMenuItem asChild key={value}>
-                              <Badge
-                                aria-disabled={isUpdateStausPending}
+                    <TableCell className="text-center">
+                      {order.status === "delivered" ? (
+                        <Badge
+                          className="cursor-pointer"
+                          onClick={() => {
+                            toast.warning("لا يمكن التغيير في هذة الحالة");
+                          }}
+                          variant={detectCurrentBadgeColor(order.status)}
+                        >
+                          {detectCurrentStatus(order.status)?.lable}
+                        </Badge>
+                      ) : (
+                        <DropdownMenu dir="rtl">
+                          <DropdownMenuTrigger asChild>
+                            <Badge
+                              className="cursor-pointer"
+                              variant={detectCurrentBadgeColor(order.status)}
+                            >
+                              {detectCurrentStatus(order.status)?.lable}
+                            </Badge>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="space-y-2">
+                            {OrderStatus.map(({ value }) => (
+                              <DropdownMenuItem asChild key={value}>
+                                <Badge
+                                  aria-disabled={isUpdateStausPending}
+                                  onClick={() => {
+                                    toast.promise(
+                                      updateStatus({
+                                        id: order._id,
+                                        status: value,
+                                      }),
+                                      {
+                                        loading: "جاري التحديث",
+                                        error: (err) => `حدث خطأ ما ${err}`,
+                                        success: "تم تحديث حالة الأوردر",
+                                      },
+                                    );
+                                  }}
+                                  className="w-full cursor-pointer"
+                                  variant={detectCurrentBadgeColor(value)}
+                                >
+                                  {detectCurrentStatus(value)?.lable}
+                                </Badge>
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      {new Date(order.updatedAt).toLocaleDateString("ar-EG")}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {new Date(order.createdAt).toLocaleDateString("ar-EG")}
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="sm">عرض</Button>
+                        </DialogTrigger>
+                        <DialogContent className="p-4">
+                          <DialogHeader className="print:w-full">
+                            <DialogTitle className="flex items-center gap-2">
+                              <Button
                                 onClick={() => {
-                                  toast.promise(
-                                    updateStatus({
-                                      id: order._id,
-                                      status: value,
-                                    }),
-                                    {
-                                      loading: "جاري التحديث",
-                                      error: (err) => `حدث خطأ ما ${err}`,
-                                      success: "تم تحديث حالة الأوردر",
-                                    },
-                                  );
-                                }}
-                                className="w-full cursor-pointer"
-                                variant={detectCurrentBadgeColor(value)}
-                              >
-                                {detectCurrentStatus(value)?.lable}
-                              </Badge>
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </TableCell>
-
-                  <TableCell className="text-center">
-                    {new Date(order.updatedAt).toLocaleDateString("ar-EG")}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {new Date(order.createdAt).toLocaleDateString("ar-EG")}
-                  </TableCell>
-
-                  <TableCell className="text-center">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button size="sm">عرض</Button>
-                      </DialogTrigger>
-                      <DialogContent className="p-4">
-                        <DialogHeader className="print:w-full">
-                          <DialogTitle className="flex items-center gap-2">
-                            <Button
-                              onClick={() => {
-                                const printWindow = window.open("", "_blank");
-                                if (printWindow) {
-                                  const printContent =
-                                    generateOrderPrintHTML(order);
-                                  printWindow.document.write(`
+                                  const printWindow = window.open("", "_blank");
+                                  if (printWindow) {
+                                    const printContent =
+                                      generateOrderPrintHTML(order);
+                                    printWindow.document.write(`
                                     <html>
                                       <head>
                                         <title>طباعة الطلب</title>
@@ -744,182 +795,210 @@ ${itemsText}
                                       <body>${printContent}</body>
                                     </html>
                                   `);
-                                  printWindow.document.close();
-                                  printWindow.focus();
-                                  setTimeout(() => {
-                                    printWindow.print();
-                                    printWindow.close();
-                                  }, 500);
-                                }
-                              }}
-                              variant={"outline"}
-                              className="print:hidden"
-                            >
-                              <Printer />
-                            </Button>
-                            معلومات الأوردر
-                            <span className="items-center gap-2 flex">
-                              ({order.items.length})
-                            </span>
-                          </DialogTitle>
-                          <DialogDescription className=""></DialogDescription>
-                        </DialogHeader>
-
-                        <div className="px-3 relative space-y-5">
-                          {/* Logo for Print only */}
-                          <div className="hidden print:flex justify-center mb-4">
-                            <Image
-                              src="/logo-icon.png"
-                              alt="Elena Store Logo"
-                              width={150}
-                              height={150}
-                              className="object-contain"
-                            />
-                          </div>
-                          <ul className="space-y-2">
-                            <li className="flex items-center gap-2">
-                              <span className="font-medium">الأسم :</span>
-                              <h4 className="capitalize">
-                                {order.shipping.name}
-                              </h4>
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <span className="font-medium">
-                                المحافظة - المدينة :
+                                    printWindow.document.close();
+                                    printWindow.focus();
+                                    setTimeout(() => {
+                                      printWindow.print();
+                                      printWindow.close();
+                                    }, 500);
+                                  }
+                                }}
+                                variant={"outline"}
+                                className="print:hidden"
+                              >
+                                <Printer />
+                              </Button>
+                              معلومات الأوردر
+                              <span className="items-center gap-2 flex">
+                                ({order.items.length})
                               </span>
-                              <h4 className="capitalize">
-                                {order.shipping.governorate} -{" "}
-                                {order.shipping.city}
-                              </h4>
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <span className="font-medium">العنوان :</span>
-                              <h4 className="capitalize">
-                                {order.shipping.address}{" "}
-                                {order.shipping.building ? (
-                                  <>- {order.shipping.building}</>
-                                ) : null}
-                              </h4>
-                            </li>
-                            <li className="flex items-center gap-2">
-                              <span className="font-medium">رقم الهاتف :</span>
-                              <h4 className="capitalize">
-                                {order.shipping.phone}{" "}
-                                {order.shipping.phone2 &&
-                                  `- ${order.shipping.phone2}`}
-                              </h4>
-                            </li>
-                          </ul>
-                          <ScrollArea
-                            style={{
-                              height:
-                                order.items.length > 3
-                                  ? "200px"
-                                  : "fit-content",
-                            }}
-                            dir="rtl"
-                            className="py-2 print:h-full!"
-                          >
-                            {order.items.map((item: any, idx: number) => {
-                              const itemName = item.name || item.productId?.name || "Product";
-                              const itemImage = item.image || item.productId?.images?.[0]?.secure_url || "/demo.jpg";
-                              const itemColorName = Array.isArray(item.color) ? item.color[0]?.name : (item.color?.name || item.color);
-                              const itemColorHex = Array.isArray(item.color) ? item.color[0]?.hexCode : (item.color?.hexCode || "#000");
-                              const itemSizeObj = item.size?.size ? item.size : { size: item.size, range: "" };
-                              const itemFinalPrice = item.finalPrice || item.price || item.productId?.finalPrice || 0;
-                              
-                              return (
-                                <div
-                                  className="relative px-4 space-y-5"
-                                  key={item._id || idx}
-                                >
-                                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                                    <div className="flex sm:items-center gap-4 flex-1">
-                                      {/* IMAGE */}
-                                      <div className="relative">
-                                        <Image
-                                          src={itemImage}
-                                          alt={itemName}
-                                          width={80}
-                                          height={80}
-                                          className="print:hidden size-16 rounded-md object-cover object-top"
-                                        />
-                                        <Badge className="print:hidden absolute top-0 translate-x-1/2">
-                                          {item.quantity}
-                                        </Badge>
-                                      </div>
-                                      {/* DETAILS */}
-                                      <div className="space-y-1 text-right">
-                                        <h4 className="flex items-center gap-2">
-                                          <span className="hidden print:block">
-                                            المنتج :{" "}
-                                          </span>
-                                          <Link
-                                            href={item.productId?.slug ? `/product/${item.productId.slug}` : "#"}
-                                          >
-                                            {itemName}
-                                          </Link>
-                                        </h4>
-                                        <div className="flex items-center gap-2">
-                                          <span className="hidden print:block">
-                                            المقاس :{" "}
-                                          </span>
-                                          <p className="text-sm text-gray-600">
-                                            <span>{itemSizeObj.size}</span>{" "}
-                                            <span>{itemSizeObj.range}</span>
-                                          </p>
-                                        </div>
-                                        <div className="flex sm:items-center gap-2">
-                                          <span className="hidden print:block">
-                                            اللون :{" "}
-                                          </span>
-                                          <div
-                                            className="print:hidden size-4 rounded border"
-                                            style={{
-                                              backgroundColor: itemColorHex,
-                                            }}
-                                          ></div>
-                                          <p className="text-xs">
-                                            {itemColorName}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div>
-                                      <p className="font-medium">
-                                        {itemFinalPrice * item.quantity}{" "}
-                                        EGP
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <Separator />
-                                </div>
-                              );
-                            })}
-                          </ScrollArea>
-                          <div className="space-y-3 mt-5">
-                            <div className="flex items-center justify-between">
-                              <h4>سعر الشحن</h4>
-                              <p className="font-medium">
-                                {order.shipping.shippingPrice} EGP
-                              </p>
+                            </DialogTitle>
+                            <DialogDescription className=""></DialogDescription>
+                          </DialogHeader>
+
+                          <div className="px-3 relative space-y-5">
+                            {/* Logo for Print only */}
+                            <div className="hidden print:flex justify-center mb-4">
+                              <Image
+                                src="/logo-icon.png"
+                                alt="Elena Store Logo"
+                                width={150}
+                                height={150}
+                                className="object-contain"
+                              />
                             </div>
-                            <div className="flex items-center justify-between">
-                              <h4>إجمالي السعر</h4>
-                              <p className="font-medium">
-                                {order.totalPrice} EGP
-                              </p>
+                            <ul className="space-y-2">
+                              <li className="flex items-center gap-2">
+                                <span className="font-medium">الأسم :</span>
+                                <h4 className="capitalize">
+                                  {order.shipping.name}
+                                </h4>
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="font-medium">
+                                  المحافظة - المدينة :
+                                </span>
+                                <h4 className="capitalize">
+                                  {order.shipping.governorate} -{" "}
+                                  {order.shipping.city}
+                                </h4>
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="font-medium">العنوان :</span>
+                                <h4 className="capitalize">
+                                  {order.shipping.address}{" "}
+                                  {order.shipping.building ? (
+                                    <>- {order.shipping.building}</>
+                                  ) : null}
+                                </h4>
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="font-medium">
+                                  رقم الهاتف :
+                                </span>
+                                <h4 className="capitalize">
+                                  {order.shipping.phone}{" "}
+                                  {order.shipping.phone2 &&
+                                    `- ${order.shipping.phone2}`}
+                                </h4>
+                              </li>
+                            </ul>
+                            <ScrollArea
+                              style={{
+                                height:
+                                  order.items.length > 3
+                                    ? "200px"
+                                    : "fit-content",
+                              }}
+                              dir="rtl"
+                              className="py-2 print:h-full!"
+                            >
+                              {order.items.map((item: Item, idx: number) => {
+                                const itemName =
+                                  item.name ||
+                                  (item.productId as ProductId)?.name ||
+                                  "Product";
+                                const imgUrl =
+                                  typeof item.image === "object" &&
+                                  item.image !== null
+                                    ? item.image.secure_url
+                                    : typeof item.image === "string"
+                                      ? item.image
+                                      : "";
+                                const itemImage =
+                                  imgUrl ||
+                                  (item.productId as ProductId)?.images?.[0]
+                                    ?.secure_url ||
+                                  "/demo.jpg";
+                                const itemColorName = Array.isArray(item.color)
+                                  ? item.color[0]?.name
+                                  : typeof item.color === "object" &&
+                                      item.color?.name
+                                    ? item.color.name
+                                    : item.color;
+                                const itemSizeObj =
+                                  typeof item.size === "object" &&
+                                  item.size?.size
+                                    ? item.size
+                                    : { size: item.size, range: "" };
+                                const itemFinalPrice =
+                                  item.finalPrice ||
+                                  item.price ||
+                                  (item.productId as ProductId)?.finalPrice ||
+                                  0;
+
+                                return (
+                                  <div
+                                    className="relative px-4 space-y-5"
+                                    key={item._id || idx}
+                                  >
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                                      <div className="flex sm:items-center gap-4 flex-1">
+                                        {/* IMAGE */}
+                                        <div className="relative">
+                                          <Image
+                                            src={itemImage}
+                                            alt={itemName}
+                                            width={80}
+                                            height={80}
+                                            className="print:hidden size-16 rounded-md object-cover object-top"
+                                          />
+                                          <Badge className="print:hidden absolute top-0 translate-x-1/2">
+                                            {item.quantity}
+                                          </Badge>
+                                        </div>
+                                        {/* DETAILS */}
+                                        <div className="space-y-1 text-right">
+                                          <h4 className="flex items-center gap-2">
+                                            <span className="hidden print:block">
+                                              المنتج :{" "}
+                                            </span>
+                                            <Link
+                                              href={
+                                                (item.productId as ProductId)
+                                                  ?.slug
+                                                  ? `/product/${(item.productId as ProductId).slug}`
+                                                  : "#"
+                                              }
+                                            >
+                                              {itemName}
+                                            </Link>
+                                          </h4>
+                                          <div className="flex items-center gap-2">
+                                            <span className="hidden print:block">
+                                              المقاس :{" "}
+                                            </span>
+                                            <p className="text-sm text-gray-600">
+                                              <span>
+                                                {itemSizeObj.size.toString()}
+                                              </span>{" "}
+                                              <span>{itemSizeObj.range}</span>
+                                            </p>
+                                          </div>
+                                          <div className="flex sm:items-center gap-2">
+                                            <span className="hidden print:block">
+                                              اللون :{" "}
+                                            </span>
+                                            <p className="text-xs">
+                                              {itemColorName.toString()}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <p className="font-medium">
+                                          {itemFinalPrice * item.quantity} EGP
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Separator />
+                                  </div>
+                                );
+                              })}
+                            </ScrollArea>
+                            <div className="space-y-3 mt-5">
+                              <div className="flex items-center justify-between">
+                                <h4>سعر الشحن</h4>
+                                <p className="font-medium">
+                                  {order.shipping.shippingPrice} EGP
+                                </p>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <h4>إجمالي السعر</h4>
+                                <p className="font-medium">
+                                  {order.totalPrice} EGP
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
-                </motion.tr>
-              ))}
-        </TableBody>
-      </Table>
-    </div>
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+                  </motion.tr>
+                ))}
+          </TableBody>
+        </Table>
+      </div>
       {data && data.totalPages > 1 ? (
         <Pagination dir="rtl" className="mt-4">
           <PaginationContent dir="rtl">

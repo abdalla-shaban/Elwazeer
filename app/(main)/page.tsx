@@ -69,7 +69,7 @@ export default async function Home({
   // Fetch products for sliders
   const [bestSellers, latestProducts] = await Promise.all([
     getProducts({ limit: 8, isAvailable: "true" }), // Using default sort for both as backend limit is 12 and default sort is latest
-    getProducts({ limit: 8, isAvailable: "true", sort: "oldest" }), // Just to show different products for now
+    getProducts({ limit: 8, isAvailable: "true", category: "دريس" }), // Just to show different products for now
   ]);
 
   return (

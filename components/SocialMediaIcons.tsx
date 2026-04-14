@@ -12,7 +12,7 @@ const socialItems = [
     Icon: FaFacebookF,
     style:
       "hover:-translate-y-0.5 shadow shadow-transparent hover:shadow-primary bg-blue-600",
-    href: "https://www.facebook.com/amaardola?mibextid=ZbWKwL",
+    href: "https://www.facebook.com/share/17KcPsaNdT/",
   },
   {
     Icon: FaInstagram,
@@ -36,7 +36,7 @@ const socialItems = [
     Icon: FaWhatsapp,
     style:
       "hover:-translate-y-0.5 shadow shadow-transparent hover:shadow-primary bg-green-600",
-    href: "https://wa.me/+201044882690?text=",
+    href: "https://wa.me/+201070500671?text=",
   },
 ];
 

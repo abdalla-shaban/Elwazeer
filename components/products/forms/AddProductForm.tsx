@@ -1,33 +1,35 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  CloudUpload,
+  Layers,
+  Loader,
+  Palette,
+  Plus,
+  Settings2,
+  Tag,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import {
-  useFieldArray,
-  Controller,
-  useForm,
-  useWatch,
   Control,
+  Controller,
   Path,
   Resolver,
+  useFieldArray,
+  useForm,
+  useWatch,
+  useFormState,
 } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
-import {
-  Plus,
-  Trash2,
-  ChevronRight,
-  ChevronLeft,
-  Check,
-  Layers,
-  Palette,
-  CloudUpload,
-  Loader,
-  Settings2,
-  Tag,
-} from "lucide-react";
 
 import { KeywordsInput } from "@/components/custom/KeywordsInput";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,12 +39,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -55,7 +52,6 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { convertToBase64, seasons } from "@/constants";
 import { useAddProduct, useCurrentUser, useSettings } from "@/lib/api/hooks";
 import { IProductBody } from "@/types/products";
@@ -90,10 +86,12 @@ export const formSchema = z.object({
     .min(2, "اسم المنتج لا يقل عن حرفين")
     .max(200, "اسم المنتج لا يزيد عن 200 حرف")
     .nonempty("اسم المنتج مطلوب"),
-  image_preview: z.union([z.string(), z.object({ secure_url: z.string() })]).refine(val => {
-    if (typeof val === "string") return val.length > 0;
-    return val.secure_url.length > 0;
-  }, "صورة المنتج الأساسية مطلوبة"),
+  image_preview: z
+    .union([z.string(), z.object({ secure_url: z.string() })])
+    .refine((val) => {
+      if (typeof val === "string") return val.length > 0;
+      return val.secure_url.length > 0;
+    }, "صورة المنتج الأساسية مطلوبة"),
   price: z.coerce.number().min(1, "السعر مطلوب"),
   category: z.string().nonempty("قسم المنتج مطلوب"),
   fabric: z.string().nonempty("خامة المنتج مطلوبة"),
@@ -147,6 +145,12 @@ function ColorVariant({
     name: `colors.${index}.sizes`,
   }) as FormData["colors"][0]["sizes"];
 
+  const { errors } = useFormState({ control });
+  const sizesError = errors?.colors?.[index]?.sizes;
+  const sizesRootError = !Array.isArray(sizesError)
+    ? sizesError?.message
+    : (sizesError as { root?: { message?: string } })?.root?.message;
+
   return (
     <Card className="border-2 border-muted bg-muted/30 mb-6 overflow-hidden transition-all hover:border-primary/20">
       <CardHeader className="bg-muted/50 py-3 flex flex-row items-center justify-between gap-4">
@@ -185,7 +189,7 @@ function ColorVariant({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>اسم اللون (مثلاً: أسود، أحمر)</FieldLabel>
+                <FieldLabel>اسم اللون (مثلاً: أسود، أحمر) <span className="text-destructive">*</span></FieldLabel>
                 <Input {...field} placeholder="ادخل اسم اللون" />
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
@@ -220,7 +224,7 @@ function ColorVariant({
 
         <div className="mb-6">
           <FieldLabel className="mb-3 block text-lg font-medium">
-            صور هذا اللون
+            صور هذا اللون <span className="text-destructive">*</span>
           </FieldLabel>
           <Controller
             name={`colors.${index}.images`}
@@ -287,7 +291,7 @@ function ColorVariant({
         <div>
           <div className="flex items-center justify-between mb-4">
             <FieldLabel className="text-lg font-medium">
-              المقاسات المتاحة لهذا اللون
+              المقاسات المتاحة لهذا اللون <span className="text-destructive">*</span>
             </FieldLabel>
             <Button
               type="button"
@@ -365,22 +369,28 @@ function ColorVariant({
                   <Controller
                     name={`colors.${index}.sizes.${sizeIdx}.size`}
                     control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel className="text-xs">المقاس</FieldLabel>
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel className="text-xs">المقاس <span className="text-destructive">*</span></FieldLabel>
                         <Input {...field} size={1} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
                   <Controller
                     name={`colors.${index}.sizes.${sizeIdx}.range`}
                     control={control}
-                    render={({ field }) => (
-                      <Field>
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
                         <FieldLabel className="text-xs">
                           الأبعاد (اختياري)
                         </FieldLabel>
                         <Input {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
@@ -408,16 +418,20 @@ function ColorVariant({
                   <Controller
                     name={`colors.${index}.sizes.${sizeIdx}.stock`}
                     control={control}
-                    render={({ field }) => {
+                    render={({ field, fieldState }) => {
                       const manage = sizes?.[sizeIdx]?.manageStock;
                       return (
                         <Field
                           data-slot="stock-field"
+                          data-invalid={fieldState.invalid}
                           data-disabled={!manage}
                           className={!manage ? "opacity-50" : ""}
                         >
                           <FieldLabel className="text-xs">الكمية</FieldLabel>
                           <Input {...field} type="number" disabled={!manage} />
+                          {fieldState.invalid && manage && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
                         </Field>
                       );
                     }}
@@ -434,6 +448,11 @@ function ColorVariant({
                 </Button>
               </div>
             ))}
+            {sizesRootError && (
+              <p className="text-sm font-semibold text-destructive mt-2">
+                {sizesRootError}
+              </p>
+            )}
           </div>
         </div>
       </CardContent>
@@ -459,6 +478,7 @@ export function AddProductForm() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema) as Resolver<FormData>,
+    mode: "onChange",
     defaultValues: {
       name: "",
       image_preview: "",
@@ -615,12 +635,16 @@ export function AddProductForm() {
                   render={({ field, fieldState }) => (
                     <div className="flex flex-col items-center gap-4 w-full">
                       <FieldLabel className="text-lg font-bold">
-                        الصورة المصغرة للمنتج (Preview)
+                        الصورة المصغرة للمنتج (Preview) <span className="text-destructive">*</span>
                       </FieldLabel>
                       {field.value ? (
                         <div className="relative group size-48 rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
                           <Image
-                            src={typeof field.value === "string" ? field.value : field.value.secure_url}
+                            src={
+                              typeof field.value === "string"
+                                ? field.value
+                                : field.value.secure_url
+                            }
                             alt="preview"
                             width={200}
                             height={200}
@@ -668,7 +692,7 @@ export function AddProductForm() {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel className="text-base">اسم المنتج</FieldLabel>
+                      <FieldLabel className="text-base">اسم المنتج <span className="text-destructive">*</span></FieldLabel>
                       <Input
                         {...field}
                         placeholder="ادخل اسم المنتج"
@@ -687,7 +711,7 @@ export function AddProductForm() {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel className="text-base">
-                        السعر الأساسي
+                        السعر الأساسي <span className="text-destructive">*</span>
                       </FieldLabel>
                       <div className="relative">
                         <Input
@@ -714,7 +738,7 @@ export function AddProductForm() {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>القسم</FieldLabel>
+                      <FieldLabel>القسم <span className="text-destructive">*</span></FieldLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
@@ -747,7 +771,7 @@ export function AddProductForm() {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>الخامة</FieldLabel>
+                      <FieldLabel>الخامة <span className="text-destructive">*</span></FieldLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
@@ -780,7 +804,7 @@ export function AddProductForm() {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>الموسم</FieldLabel>
+                      <FieldLabel>الموسم <span className="text-destructive">*</span></FieldLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
@@ -817,8 +841,6 @@ export function AddProductForm() {
                   )}
                 />
               </div>
-
-
             </div>
           )}
 
@@ -868,6 +890,11 @@ export function AddProductForm() {
                     </p>
                   </div>
                 )}
+                {form.formState.errors.colors?.message && (
+                  <p className="text-destructive font-bold text-center mt-4">
+                    {form.formState.errors.colors.message}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -912,7 +939,7 @@ export function AddProductForm() {
                           data-disabled={!offerActive}
                           className={`w-full md:w-48 ${!offerActive ? "opacity-50" : ""}`}
                         >
-                          <FieldLabel>نسبة الخصم (%)</FieldLabel>
+                          <FieldLabel>نسبة الخصم (%) <span className="text-destructive">*</span></FieldLabel>
                           <Input
                             {...field}
                             type="number"
@@ -940,7 +967,7 @@ export function AddProductForm() {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>
-                        وصف محركات البحث (Meta Description)
+                        وصف محركات البحث (Meta Description) <span className="text-destructive">*</span>
                       </FieldLabel>
                       <Textarea
                         {...field}
@@ -960,7 +987,7 @@ export function AddProductForm() {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>الكلمات المفتاحية</FieldLabel>
+                      <FieldLabel>الكلمات المفتاحية <span className="text-destructive">*</span></FieldLabel>
                       <KeywordsInput
                         id="metaKeywords"
                         value={field.value}
@@ -973,8 +1000,6 @@ export function AddProductForm() {
                     </Field>
                   )}
                 />
-
-
               </div>
             </div>
           )}
@@ -1024,7 +1049,8 @@ export function AddProductForm() {
                 إتمام وإضافة المنتج
               </>
             )}
-          </Button>)}
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

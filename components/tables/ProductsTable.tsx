@@ -85,7 +85,6 @@ export const ProductsTable = () => {
             <TableHead className="text-right">السعر</TableHead>
             <TableHead className="text-right">خصم</TableHead>
             <TableHead className="text-center">السعر بعد الخصم</TableHead>
-            <TableHead className="text-center">المخزون</TableHead>
             <TableHead className="text-center">الحالة</TableHead>
             <TableHead className="text-right"></TableHead>
           </TableRow>
@@ -109,7 +108,6 @@ export const ProductsTable = () => {
                   finalPrice,
                   offer,
                   slug,
-                  stock,
                   images,
                   image_preview,
                   _id,
@@ -121,7 +119,9 @@ export const ProductsTable = () => {
                         className="flex w-fit items-center gap-5"
                       >
                         <Image
-                          src={ image_preview?.secure_url || images?.[0]?.secure_url}
+                          src={
+                            image_preview?.secure_url || images?.[0]?.secure_url
+                          }
                           alt={name}
                           width={50}
                           height={50}
@@ -136,12 +136,6 @@ export const ProductsTable = () => {
                     </TableCell>
                     <TableCell className="text-center">
                       {finalPrice} EGP
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant={"outline"}>
-                        {" "}
-                        {stock?.manageStock ? stock?.stockQuantity : "غير محدد"}
-                      </Badge>
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge

@@ -61,6 +61,8 @@ const CheckOutForm = () => {
 
   const form = useForm<ShippingFormValues>({
     resolver: zodResolver(shippingSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     defaultValues: {
       shipping: {
         name: "",
@@ -128,7 +130,7 @@ const CheckOutForm = () => {
           ...res.order,
           items: (res.items || []).map((item: RawItem & { productName?: string }) => {
             const cartItem = cartData?.data?.items?.find(
-              (ci: any) => ci.productId === item.productId,
+              (ci: Item) => ci.productId === item.productId,
             );
             const itemImage = item.image && typeof item.image === "object" ? item.image : null;
             return {
@@ -276,6 +278,7 @@ const CheckOutForm = () => {
                     value={field.value}
                     onChange={(value) => {
                       field.onChange(value);
+                      form.clearErrors("shipping.governorate");
                       setPrice(
                         settingsData?.settings.shippingRates[value] as number,
                       );
@@ -300,7 +303,10 @@ const CheckOutForm = () => {
                       id="checkout-city"
                       options={cities}
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        form.clearErrors("shipping.city");
+                      }}
                       disabled={!watchedGovernorate}
                       placeholder="اختر المدينة"
                       searchPlaceholder="ابحث عن المدينة..."

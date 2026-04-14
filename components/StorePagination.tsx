@@ -18,7 +18,7 @@ const StorePagination = ({
   const page = searchParams.get("page") ?? 1;
   return (
     <>
-      {productsData && productsData.totalPages > 1 ? (
+      {productsData && productsData.pagination.totalPages > 1 ? (
         <Pagination dir="rtl" className="mt-4">
           <PaginationContent dir="rtl">
             {!productsData ? (
@@ -34,24 +34,28 @@ const StorePagination = ({
                     onClick={() => {
                       update({ page: +page + 1 });
                     }}
-                    disabled={!productsData?.hasNextPage}
+                    disabled={!productsData?.pagination.hasNextPage}
                     variant={"outline"}
                     className="rounded-full size-10 p-0 border-transparent bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 transition-colors"
                   >
                     <ChevronRight className="size-5" />
                   </Button>
                 </PaginationItem>
-                {[...Array(productsData?.totalPages)]
+                {[...Array(productsData?.pagination.totalPages)]
                   .map((_, idx) => (
                     <PaginationItem key={idx + 1} dir="rtl">
                       <Button
                         onClick={() => update({ page: idx + 1 })}
                         className={`rounded-full size-10 p-0 text-sm font-bold transition-all duration-300 ${
-                          productsData?.page === idx + 1 
-                            ? "bg-[#D696B5] hover:bg-[#c485a3] text-white shadow-md scale-110" 
+                          productsData?.pagination.page === idx + 1
+                            ? "bg-[#D696B5] hover:bg-[#c485a3] text-white shadow-md scale-110"
                             : "bg-transparent text-slate-600 hover:bg-slate-100"
                         }`}
-                        variant={productsData?.page === idx + 1 ? "default" : "ghost"}
+                        variant={
+                          productsData?.pagination.page === idx + 1
+                            ? "default"
+                            : "ghost"
+                        }
                       >
                         {idx + 1}
                       </Button>
@@ -63,7 +67,7 @@ const StorePagination = ({
                     onClick={() => {
                       update({ page: +page - 1 });
                     }}
-                    disabled={!productsData?.hasPrevPage}
+                    disabled={!productsData?.pagination.hasPrevPage}
                     variant={"outline"}
                     className="rounded-full size-10 p-0 border-transparent bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 transition-colors"
                   >

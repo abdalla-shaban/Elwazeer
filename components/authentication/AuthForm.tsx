@@ -27,6 +27,7 @@ import { Eye, EyeClosed } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Image from "next/image";
 
 type SignInType = z.infer<typeof signInFormSchema>;
 type SignUpType = z.infer<typeof signUpFormSchema>;
@@ -90,11 +91,27 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
   }
 
   return (
-    <Card className="w-full relative sm:max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle>اهلا بك في يارا ستور</CardTitle>
-        <CardDescription>
-          ادخل البيانات {mode === "signin" ? " لتسجيل الدخول" : "لإنشاء الحساب"}
+    <Card className="w-full relative sm:max-w-md border-0 shadow-xl bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden p-2 sm:p-4">
+      <CardHeader className="text-center space-y-3 pb-6">
+        <div className="flex justify-center mb-2">
+          <Link href="/">
+            <Image
+              src="/logo-icon.png"
+              width={70}
+              height={70}
+              alt="Elena Fashion"
+              className="object-contain hover:opacity-90 transition-opacity"
+              priority
+            />
+          </Link>
+        </div>
+        <CardTitle className="text-2xl font-bold tracking-tight text-gray-900">
+          مرحباً بك في إلينا
+        </CardTitle>
+        <CardDescription className="text-muted-foreground font-medium text-sm">
+          {mode === "signin"
+            ? "قم بتسجيل الدخول للمتابعة"
+            : "قم بإنشاء حساب جديد للبدء"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -167,12 +184,12 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
                       !showPassword ? (
                         <Eye
                           onClick={() => setShowPassword(true)}
-                          className="absolute cursor-pointer top-1/2 end-4 size-4 -translate-y-1/2"
+                          className="absolute cursor-pointer top-1/2 inset-e-4 size-4 -translate-y-1/2"
                         />
                       ) : (
                         <EyeClosed
                           onClick={() => setShowPassword(false)}
-                          className="absolute cursor-pointer top-1/2 end-4 size-4 -translate-y-1/2"
+                          className="absolute cursor-pointer top-1/2 inset-e-4 size-4 -translate-y-1/2"
                         />
                       )
                     ) : null}
@@ -216,12 +233,12 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
                         !showConfirmPassword ? (
                           <Eye
                             onClick={() => setShowConfirmPassword(true)}
-                            className="absolute cursor-pointer top-1/2 end-4 size-4 -translate-y-1/2"
+                            className="absolute cursor-pointer top-1/2 inset-e-4 size-4 -translate-y-1/2"
                           />
                         ) : (
                           <EyeClosed
                             onClick={() => setShowConfirmPassword(false)}
-                            className="absolute cursor-pointer top-1/2 end-4 size-4 -translate-y-1/2"
+                            className="absolute cursor-pointer top-1/2 inset-e-4 size-4 -translate-y-1/2"
                           />
                         )
                       ) : null}
@@ -236,31 +253,37 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
           </FieldGroup>
         </form>
       </CardContent>
-      <CardFooter>
-        <div className="w-full space-y-4">
+      <CardFooter className="pt-2 pb-6">
+        <div className="w-full space-y-6">
           <Button
-            className="w-full"
+            className="w-full h-12 text-base font-medium rounded-xl shadow-md hover:shadow-lg transition-all"
             type="submit"
             form="auth-form"
             disabled={mode === "signin" ? isSigninPending : isSignupPending}
           >
             {mode === "signin" ? "تسجيل الدخول" : "إنشاء حساب"}
           </Button>
-          <div className="text-sm flex items-center justify-center text-center gap-2">
+          <div className="text-sm flex flex-col items-center justify-center text-center gap-3 mt-4 text-muted-foreground">
             {mode === "signin" ? (
-              <>
-                <p>لا تمتلك حساب ؟</p>
-                <Link href={"/signup"} className="text-blue-800 underline">
+              <p>
+                لا تمتلك حساب ؟{" "}
+                <Link
+                  href={"/signup"}
+                  className="text-black font-semibold hover:underline underline-offset-4 transition-all"
+                >
                   إنشاء حساب
                 </Link>
-              </>
+              </p>
             ) : (
-              <>
-                <p>تمتلك حساب بالفعل ؟</p>
-                <Link href={"/signin"} className="text-blue-800 underline">
+              <p>
+                تمتلك حساب بالفعل ؟{" "}
+                <Link
+                  href={"/signin"}
+                  className="text-black font-semibold hover:underline underline-offset-4 transition-all"
+                >
                   تسجيل الدخول
                 </Link>
-              </>
+              </p>
             )}
           </div>
         </div>
