@@ -1,6 +1,6 @@
 export const BASE_URL =
   process.env.NODE_ENV === "production"
-    ? "https://api.elenastoreofficial.com"
+    ? "https://api.wazeerstore.com"
     : "http://127.0.0.1:8000";
 
 export const categories = ["عباية"];

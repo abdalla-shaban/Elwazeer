@@ -18,7 +18,7 @@ export async function generateMetadata({
     description: productData.metaDescription,
     keywords: productData.metaKeywords,
     alternates: {
-      canonical: `https://elenastoreofficial.com/product/${slug}`,
+      canonical: `https://wazeerstoreofficial.com/product/${slug}`,
     },
   };
 }

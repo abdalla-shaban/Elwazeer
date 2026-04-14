@@ -97,7 +97,7 @@ export const formSchema = z.object({
   category: z.string().nonempty("قسم المنتج مطلوب"),
   fabric: z.string().nonempty("خامة المنتج مطلوبة"),
   season: z.string().nonempty("موسم المنتج مطلوب"),
-  brand: z.string().default("Elena Fashion Store"),
+  brand: z.string().default("Wazeer Store"),
   metaDescription: z.string().trim().nonempty("وصف المنتج مطلوب"),
   metaKeywords: z
     .array(z.string())
@@ -162,7 +162,7 @@ function ColorVariant({
       price: 0,
       fabric: "",
       season: "",
-      brand: "Elena Fashion Store",
+      brand: "Wazeer Store",
       metaDescription: "",
       metaKeywords: [],
       category: "",
@@ -534,7 +534,7 @@ export function AddProductForm() {
       price: 0,
       fabric: "",
       season: "",
-      brand: "Elena Fashion Store",
+      brand: "Wazeer Store",
       metaDescription: "",
       metaKeywords: [],
       category: "",

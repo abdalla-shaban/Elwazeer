@@ -1,4 +1,4 @@
-# Elena Store (ايلينا ستور)
+# Wazeer Store (وزير العباية ستور)
 
 A premium e-commerce platform built with Next.js 15, Tailwind 4, and Node.js.
 
@@ -22,6 +22,7 @@ If you are an AI assistant working on this project, please read the [AI Agent RE
 ### Installation
 
 1. **Frontend**:
+
    ```bash
    cd frontend
    npm install
@@ -37,4 +38,4 @@ If you are an AI assistant working on this project, please read the [AI Agent RE
 
 ---
 
-*Elena Store - Premium Shopping Experience*
+_Wazeer Store - Premium Shopping Experience_

@@ -3,7 +3,7 @@ import SocialMediaIcons from "@/components/SocialMediaIcons";
 export const metadata = {
   title: "سياسة الاسترداد والاستبدال",
   description:
-    "سياسة الاسترداد والاستبدال لمتجر يارا ستور، توضح شروط المعاينة والاستبدال.",
+    "سياسة الاسترداد والاستبدال لمتجر وزير العباية ستور، توضح شروط المعاينة والاستبدال.",
 };
 
 export default function RefundPolicyPage() {
@@ -17,8 +17,8 @@ export default function RefundPolicyPage() {
       {/* Content */}
       <section className="space-y-4 text-sm leading-7">
         <p>
-          في <strong>Elena Store (ايلينا ستور)</strong>  نحرص على رضا عملائنا وتقديم
-          تجربة تسوق موثوقة وواضحة.
+          في <strong>Wazeer Store (وزير العباية ستور)</strong> نحرص على رضا
+          عملائنا وتقديم تجربة تسوق موثوقة وواضحة.
         </p>
 
         <p>

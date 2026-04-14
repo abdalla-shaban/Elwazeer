@@ -99,14 +99,14 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
               src="/logo-icon.png"
               width={70}
               height={70}
-              alt="Elena Fashion"
+              alt="Wazeer Store"
               className="object-contain hover:opacity-90 transition-opacity"
               priority
             />
           </Link>
         </div>
         <CardTitle className="text-2xl font-bold tracking-tight text-gray-900">
-          مرحباً بك في إلينا
+          مرحباً بك في وزير العباية
         </CardTitle>
         <CardDescription className="text-muted-foreground font-medium text-sm">
           {mode === "signin"

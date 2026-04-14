@@ -10,9 +10,9 @@ import { Suspense } from "react";
 export const metadata: Metadata = {
   title: "الرئيسية",
   description:
-    "يارا ستور هو متجر ملابس حريمي أونلاين يوفر أحدث صيحات الموضة من فساتين، بلايز، وتيشيرتات بجودة عالية وأسعار مناسبة مع توصيل سريع داخل مصر.",
+    "وزير العباية ستور هو متجر ملابس حريمي أونلاين يوفر أحدث صيحات الموضة من فساتين، بلايز، وتيشيرتات بجودة عالية وأسعار مناسبة مع توصيل سريع داخل مصر.",
   keywords: [
-    "يارا ستور",
+    "وزير العباية ستور",
     "ملابس حريمي",
     "فساتين حريمي",
     "ملابس نسائية أونلاين",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     "ملابس كاجوال حريمي",
   ],
   alternates: {
-    canonical: "https://elenastoreofficial.com",
+    canonical: "https://wazeerstoreofficial.com",
   },
   robots: {
     index: true,

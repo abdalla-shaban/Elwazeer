@@ -103,10 +103,10 @@ const PRINT_STYLES = `
 const generateOrderPrintHTML = (order: Order) => `
   <div class="order-page">
     <div class="logo-container">
-      <img src="/logo-icon.png" alt="Elena Store Logo" />
+      <img src="/logo-icon.png" alt="Wazeer Store Logo" />
     </div>
     <div class="order-header">
-      <h2>إلينا ستور</h2>
+      <h2>وزير العباية ستور</h2>
       <p>رقم الطلب: ${order._id.slice(-6).toUpperCase()}</p>
       <p>التاريخ: ${new Date(order.createdAt).toLocaleDateString("ar-EG")}</p>
     </div>
@@ -141,7 +141,7 @@ const generateOrderPrintHTML = (order: Order) => `
               : typeof item.color === "object" && item.color?.name
                 ? item.color.name
                 : item.color;
-            const itemPrice = item.price || item.finalPrice || 0;
+            const itemPrice = item.price || item.totalItemPrice || 0;
             return `
           <tr>
             <td>${itemName}</td>
@@ -265,7 +265,7 @@ export const OrdersTable = () => {
           : typeof item.color === "object" && item.color?.name
             ? item.color.name
             : item.color;
-        const itemPrice = item.price || item.finalPrice || 0;
+        const itemPrice = item.price || item.totalItemPrice || 0;
         return `- ${itemName}
   • المقاس: ${itemSize}
   • اللون: ${itemColor}
@@ -275,7 +275,7 @@ export const OrdersTable = () => {
       .join("\n");
 
     const message = `
- اهلاً بك في الينا ستور
+ اهلاً بك في وزير العباية ستور
 
  الاسم: ${order.shipping.name}
  الهاتف: ${order.shipping.phone}
@@ -821,7 +821,7 @@ ${itemsText}
                             <div className="hidden print:flex justify-center mb-4">
                               <Image
                                 src="/logo-icon.png"
-                                alt="Elena Store Logo"
+                                alt="Wazeer Store Logo"
                                 width={150}
                                 height={150}
                                 className="object-contain"
@@ -902,7 +902,7 @@ ${itemsText}
                                     ? item.size
                                     : { size: item.size, range: "" };
                                 const itemFinalPrice =
-                                  item.finalPrice ||
+                                  item.totalItemPrice ||
                                   item.price ||
                                   (item.productId as ProductId)?.finalPrice ||
                                   0;
