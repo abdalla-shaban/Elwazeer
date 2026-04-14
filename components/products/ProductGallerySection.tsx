@@ -16,7 +16,7 @@ interface GalleryImage extends ProductDetailsImage {
 
 const ProductGallerySection = ({ productData }: { productData: Product }) => {
   const allColors = productData.colors || [];
-  
+
   // Filter only available colors
   const availableColors = useMemo(
     () => allColors.filter((color) => color.isAvailable),
@@ -29,10 +29,7 @@ const ProductGallerySection = ({ productData }: { productData: Product }) => {
   );
 
   const initialImage = useMemo(() => {
-    return (
-      availableColors?.[0]?.images?.[0]?.secure_url ||
-      "/demo.jpg"
-    );
+    return availableColors?.[0]?.images?.[0]?.secure_url || "/demo.jpg";
   }, [availableColors]);
 
   const [mainImage, setMainImage] = useState<string>(initialImage);
@@ -179,6 +176,9 @@ const ProductGallerySection = ({ productData }: { productData: Product }) => {
         <div className="space-y-4">
           <div className="inline-flex items-center px-4 py-1 rounded-full bg-primary/5 border border-primary/10 text-primary text-sm font-bold tracking-wider uppercase">
             {productData.category}
+            {productData.productType === "3d" && (
+              <span className="mr-2 border-r pr-2 border-primary/20">3D</span>
+            )}
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight">
             {productData.name}
@@ -210,7 +210,9 @@ const ProductGallerySection = ({ productData }: { productData: Product }) => {
             </div>
           )}
         </div>
-
+        <div className="inline-flex items-center px-4 py-1 rounded-full bg-primary/5 border w-fit border-primary/10 text-primary text-sm font-bold tracking-wider uppercase">
+          {productData.colors[0].name}
+        </div>
         <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100">
           <ProductDetailsFormActions
             item={productData}

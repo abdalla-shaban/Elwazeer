@@ -62,6 +62,7 @@ import {
 import { IProductBody, IProductImage } from "@/types/products";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // --- Schemas ---
 
@@ -121,6 +122,7 @@ export const formSchema = z.object({
     isAvailable: z.boolean().default(false),
     percent: z.coerce.number().min(0).max(100).default(0),
   }),
+  productType: z.enum(["normal", "3d"]).default("normal"),
   colors: z.array(colorSchema).min(1, "يجب إضافة لون واحد على الأقل"),
 });
 
@@ -167,6 +169,34 @@ function ColorVariant({
     ? sizesError?.message
     : (sizesError as { root?: { message?: string } })?.root?.message;
 
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema) as Resolver<FormData>,
+    mode: "onChange",
+    defaultValues: {
+      name: "",
+      image_preview: "",
+      price: 0,
+      fabric: "",
+      season: "",
+      brand: "Elena Fashion Store",
+      metaDescription: "",
+      metaKeywords: [],
+      category: "",
+      offer: {
+        isAvailable: false,
+        percent: 0,
+      },
+      productType: "normal",
+      colors: [
+        {
+          name: "",
+          hexCode: "#000000",
+          images: [],
+          sizes: [],
+        },
+      ],
+    },
+  });
   return (
     <Card className="border-2 border-muted bg-muted/30 mb-6 overflow-hidden transition-all hover:border-primary/20">
       <CardHeader className="bg-muted/50 py-3 flex flex-row items-center justify-between gap-4">
@@ -221,48 +251,62 @@ function ColorVariant({
         </div>
       </CardHeader>
       <CardContent className="pt-6">
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <Controller
-            name={`colors.${index}.name`}
-            control={control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>اسم اللون (مثلاً: أسود، أحمر) <span className="text-destructive">*</span></FieldLabel>
-                <Input {...field} placeholder="ادخل اسم اللون" />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
+        {form.getValues("productType") === "normal" && (
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <Controller
+              name={`colors.${index}.name`}
+              control={control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>
+                    اسم اللون (مثلاً: أسود، أحمر){" "}
+                    <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <Input {...field} placeholder="ادخل اسم اللون" />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
 
-          <Controller
-            name={`colors.${index}.hexCode`}
-            control={control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>كود اللون (Hex)</FieldLabel>
-                <div className="flex gap-2">
-                  <Input
-                    {...field}
-                    type="color"
-                    className="w-12 h-10 p-1 cursor-pointer"
-                  />
-                  <Input {...field} placeholder="#000000" className="flex-1" />
-                </div>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-        </div>
+            <Controller
+              name={`colors.${index}.hexCode`}
+              control={control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>كود اللون (Hex)</FieldLabel>
+                  <div className="flex gap-2">
+                    <Input
+                      {...field}
+                      type="color"
+                      className="w-12 h-10 p-1 cursor-pointer"
+                    />
+                    <Input
+                      {...field}
+                      placeholder="#000000"
+                      className="flex-1"
+                    />
+                  </div>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+          </div>
+        )}
 
-        <Separator className="my-6" />
+        {form.getValues("productType") === "normal" && (
+          <Separator className="my-6" />
+        )}
 
         <div className="mb-6">
           <FieldLabel className="mb-3 block text-lg font-medium">
-            صور هذا اللون <span className="text-destructive">*</span>
+            {form.getValues("productType") === "3d"
+              ? "صور هذا التصميم"
+              : "صور هذا اللون"}{" "}
+            <span className="text-destructive">*</span>
           </FieldLabel>
           <Controller
             name={`colors.${index}.images`}
@@ -335,7 +379,10 @@ function ColorVariant({
         <div>
           <div className="flex items-center justify-between mb-4">
             <FieldLabel className="text-lg font-medium">
-              المقاسات المتاحة لهذا اللون <span className="text-destructive">*</span>
+              {form.getValues("productType") === "3d"
+                ? "المقاسات المتاحة لهذا التصميم"
+                : "المقاسات المتاحة لهذا اللون"}{" "}
+              <span className="text-destructive">*</span>
             </FieldLabel>
             <Button
               type="button"
@@ -415,7 +462,9 @@ function ColorVariant({
                     control={control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel className="text-xs">المقاس <span className="text-destructive">*</span></FieldLabel>
+                        <FieldLabel className="text-xs">
+                          المقاس <span className="text-destructive">*</span>
+                        </FieldLabel>
                         <Input {...field} size={1} />
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
@@ -596,6 +645,7 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
         metaDescription: p.metaDescription || "",
         metaKeywords: p.metaKeywords || [],
         category: p.category || "",
+        productType: p.productType || "normal",
         offer: {
           isAvailable: p.offer?.isAvailable ?? false,
           percent: p.offer?.percent ?? 0,
@@ -759,7 +809,8 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   render={({ field, fieldState }) => (
                     <div className="flex flex-col items-center gap-4 w-full">
                       <FieldLabel className="text-lg font-bold">
-                        الصورة المصغرة للمنتج (Preview) <span className="text-destructive">*</span>
+                        الصورة المصغرة للمنتج (Preview){" "}
+                        <span className="text-destructive">*</span>
                       </FieldLabel>
                       {field.value ? (
                         <div className="relative group size-48 rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
@@ -816,7 +867,9 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel className="text-base">اسم المنتج <span className="text-destructive">*</span></FieldLabel>
+                      <FieldLabel className="text-base">
+                        اسم المنتج <span className="text-destructive">*</span>
+                      </FieldLabel>
                       <Input
                         {...field}
                         placeholder="مثال: عباية كريب ملكي"
@@ -835,7 +888,8 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel className="text-base">
-                        السعر الأساسي <span className="text-destructive">*</span>
+                        السعر الأساسي{" "}
+                        <span className="text-destructive">*</span>
                       </FieldLabel>
                       <div className="relative">
                         <Input
@@ -856,13 +910,72 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                 />
               </div>
 
+              <div className="grid md:grid-cols-2 gap-8">
+                <Controller
+                  name="productType"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel className="text-base font-bold">
+                        نوع الطلب
+                      </FieldLabel>
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={(val) => {
+                          field.onChange(val);
+                          if (
+                            val === "3d" &&
+                            form.getValues("colors").length > 1
+                          ) {
+                            const firstColor = form.getValues("colors")[0];
+                            form.setValue("colors", [firstColor]);
+                          } else if (
+                            val === "3d" &&
+                            form.getValues("colors").length === 0
+                          ) {
+                            form.setValue("colors", [
+                              {
+                                name: "3D Design",
+                                hexCode: "#ffffff",
+                                images: [],
+                                sizes: [],
+                                isAvailable: true,
+                              },
+                            ]);
+                          }
+                        }}
+                        className="flex gap-4 mt-2"
+                      >
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                          <RadioGroupItem value="normal" id="type-normal" />
+                          <label
+                            htmlFor="type-normal"
+                            className="cursor-pointer"
+                          >
+                            طلب عادي (Normal)
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                          <RadioGroupItem value="3d" id="type-3d" />
+                          <label htmlFor="type-3d" className="cursor-pointer">
+                            طلب 3D
+                          </label>
+                        </div>
+                      </RadioGroup>
+                    </Field>
+                  )}
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Controller
                   name="category"
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>القسم <span className="text-destructive">*</span></FieldLabel>
+                      <FieldLabel>
+                        القسم <span className="text-destructive">*</span>
+                      </FieldLabel>
                       <Select
                         value={field.value}
                         key={field.value}
@@ -896,7 +1009,9 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>الخامة <span className="text-destructive">*</span></FieldLabel>
+                      <FieldLabel>
+                        الخامة <span className="text-destructive">*</span>
+                      </FieldLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
@@ -930,7 +1045,9 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>الموسم <span className="text-destructive">*</span></FieldLabel>
+                      <FieldLabel>
+                        الموسم <span className="text-destructive">*</span>
+                      </FieldLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
@@ -974,27 +1091,30 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
           {/* STEP 2: VARIANTS */}
           {step === 2 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Palette className="text-primary" />
-                  الألوان والمتغيرات
-                </h3>
-                <Button
-                  type="button"
-                  onClick={() =>
-                    appendColor({
-                      name: "",
-                      hexCode: "#000000",
-                      images: [],
-                      sizes: [],
-                      isAvailable: true,
-                    })
-                  }
-                  className="bg-primary hover:bg-primary/90 shadow-md"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  إضافة لون جديد
-                </Button>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-2xl font-bold">
+                  {form.getValues("productType") === "3d"
+                    ? "تفاصيل التصميم"
+                    : "متغيرات الألوان"}
+                </h2>
+                {form.getValues("productType") === "normal" && (
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      appendColor({
+                        name: "",
+                        hexCode: "#000000",
+                        images: [],
+                        sizes: [],
+                        isAvailable: true,
+                      })
+                    }
+                    className="gap-2"
+                  >
+                    <Plus className="size-4" />
+                    إضافة لون جديد
+                  </Button>
+                )}
               </div>
 
               <div className="min-h-[200px]">

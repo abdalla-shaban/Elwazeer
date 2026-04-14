@@ -157,59 +157,61 @@ const ProductDetailsFormActions = ({
         className="space-y-8"
       >
         {/* COLOR SELECTION */}
-        <div className="space-y-5">
-          <div className="flex items-center justify-between">
-            <label className="text-xl font-black text-slate-800">
-              الألوان المتوفرة:
-            </label>
-            <span className="text-sm font-bold text-primary bg-primary/5 px-3 py-1 rounded-full">
-              {currentColor?.name}
-            </span>
+        {item.productType !== "3d" && (
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <label className="text-xl font-black text-slate-800">
+                الألوان المتوفرة:
+              </label>
+              <span className="text-sm font-bold text-primary bg-primary/5 px-3 py-1 rounded-full">
+                {currentColor?.name}
+              </span>
+            </div>
+            <Controller
+              name="colorId"
+              control={form.control}
+              render={({ field }) => (
+                <RadioGroup
+                  className="flex flex-wrap gap-4"
+                  value={field.value}
+                  onValueChange={(val) => {
+                    field.onChange(val);
+                    const color = colors.find((c) => c._id === val);
+                    if (color && onColorChange) onColorChange(color);
+                  }}
+                >
+                  {colors?.map((color) => (
+                    <div key={color._id} className="relative group">
+                      <RadioGroupItem
+                        value={color._id}
+                        id={`color-${color._id}`}
+                        className="sr-only"
+                        disabled={!color.isAvailable}
+                      />
+                      <label
+                        htmlFor={`color-${color._id}`}
+                        className={cn(
+                          "relative flex size-12 items-center justify-center rounded-full border-4 transition-all duration-300 ring-offset-2",
+                          color.isAvailable ? "cursor-pointer hover:scale-110" : "opacity-50 cursor-not-allowed",
+                          field.value === color._id && color.isAvailable
+                            ? "border-white ring-2 ring-primary scale-110 shadow-lg"
+                            : "border-transparent ring-0",
+                          color.isAvailable && field.value !== color._id && "hover:ring-2 hover:ring-slate-200"
+                        )}
+                        style={{ backgroundColor: color.hexCode }}
+                        title={color.name}
+                      >
+                        {!color.isAvailable && (
+                          <LucideX className="absolute inset-0 m-auto text-white drop-shadow-md size-6" />
+                        )}
+                      </label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              )}
+            />
           </div>
-          <Controller
-            name="colorId"
-            control={form.control}
-            render={({ field }) => (
-              <RadioGroup
-                className="flex flex-wrap gap-4"
-                value={field.value}
-                onValueChange={(val) => {
-                  field.onChange(val);
-                  const color = colors.find((c) => c._id === val);
-                  if (color && onColorChange) onColorChange(color);
-                }}
-              >
-                {colors?.map((color) => (
-                  <div key={color._id} className="relative group">
-                    <RadioGroupItem
-                      value={color._id}
-                      id={`color-${color._id}`}
-                      className="sr-only"
-                      disabled={!color.isAvailable}
-                    />
-                    <label
-                      htmlFor={`color-${color._id}`}
-                      className={cn(
-                        "relative flex size-12 items-center justify-center rounded-full border-4 transition-all duration-300 ring-offset-2",
-                        color.isAvailable ? "cursor-pointer hover:scale-110" : "opacity-50 cursor-not-allowed",
-                        field.value === color._id && color.isAvailable
-                          ? "border-white ring-2 ring-primary scale-110 shadow-lg"
-                          : "border-transparent ring-0",
-                        color.isAvailable && field.value !== color._id && "hover:ring-2 hover:ring-slate-200"
-                      )}
-                      style={{ backgroundColor: color.hexCode }}
-                      title={color.name}
-                    >
-                      {!color.isAvailable && (
-                        <LucideX className="absolute inset-0 m-auto text-white drop-shadow-md size-6" />
-                      )}
-                    </label>
-                  </div>
-                ))}
-              </RadioGroup>
-            )}
-          />
-        </div>
+        )}
 
         {/* SIZE SELECTION */}
         <div className="space-y-5">

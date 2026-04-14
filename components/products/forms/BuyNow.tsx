@@ -280,57 +280,61 @@ const BuyNow = ({
         >
           {/* Variants Selection Card */}
           <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] space-y-6">
-            <FormField
-              control={form.control}
-              name="colors"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-bold text-slate-800 flex items-center gap-2 mb-3">
-                    <Palette className="size-4 text-slate-400" />
-                    اللون المطلوب
-                  </FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      dir="rtl"
-                      className="flex flex-wrap gap-3"
-                      value={field.value?.[0]?.hexCode}
-                      onValueChange={(val) => {
-                        const selected = colors.find((c) => c.hexCode === val);
-                        field.onChange(selected ? [selected] : []);
-                      }}
-                    >
-                      {colors?.map((color) => (
-                        <FormItem key={color._id} className="relative">
-                          <FormControl>
-                            <RadioGroupItem
-                              value={color.hexCode}
-                              disabled={!color.isAvailable}
-                              className="peer sr-only"
-                            />
-                          </FormControl>
-                          <FormLabel
-                            className={cn(
-                              "flex size-10 items-center justify-center rounded-full border-2 border-transparent bg-white shadow-sm ring-1 ring-slate-200 transition-all",
-                              color.isAvailable ? "cursor-pointer hover:scale-110 peer-data-[state=checked]:border-white peer-data-[state=checked]:ring-primary peer-data-[state=checked]:ring-2 peer-data-[state=checked]:scale-110" : "opacity-50 cursor-not-allowed"
-                            )}
-                            style={{ backgroundColor: color.hexCode }}
-                            title={color.name}
-                          >
-                            <span className="sr-only">{color.name}</span>
-                            {!color.isAvailable && (
-                              <X className="text-white drop-shadow-md size-6" />
-                            )}
-                          </FormLabel>
-                        </FormItem>
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
+            {product.productType !== "3d" && (
+              <FormField
+                control={form.control}
+                name="colors"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-bold text-slate-800 flex items-center gap-2 mb-3">
+                      <Palette className="size-4 text-slate-400" />
+                      اللون المطلوب
+                    </FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        dir="rtl"
+                        className="flex flex-wrap gap-3"
+                        value={field.value?.[0]?.hexCode}
+                        onValueChange={(val) => {
+                          const selected = colors.find((c) => c.hexCode === val);
+                          field.onChange(selected ? [selected] : []);
+                        }}
+                      >
+                        {colors?.map((color) => (
+                          <FormItem key={color._id} className="relative">
+                            <FormControl>
+                              <RadioGroupItem
+                                value={color.hexCode}
+                                disabled={!color.isAvailable}
+                                className="peer sr-only"
+                              />
+                            </FormControl>
+                            <FormLabel
+                              className={cn(
+                                "flex size-10 items-center justify-center rounded-full border-2 border-transparent bg-white shadow-sm ring-1 ring-slate-200 transition-all",
+                                color.isAvailable ? "cursor-pointer hover:scale-110 peer-data-[state=checked]:border-white peer-data-[state=checked]:ring-primary peer-data-[state=checked]:ring-2 peer-data-[state=checked]:scale-110" : "opacity-50 cursor-not-allowed"
+                              )}
+                              style={{ backgroundColor: color.hexCode }}
+                              title={color.name}
+                            >
+                              <span className="sr-only">{color.name}</span>
+                              {!color.isAvailable && (
+                                <X className="text-white drop-shadow-md size-6" />
+                              )}
+                            </FormLabel>
+                          </FormItem>
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+            )}
 
-            <Separator className="bg-slate-50" />
+            {product.productType !== "3d" && (
+              <Separator className="bg-slate-50" />
+            )}
 
             <FormField
               control={form.control}

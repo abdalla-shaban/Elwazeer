@@ -23,6 +23,7 @@ export interface IProductBody {
   isAvailable?: boolean;
   category: string;
   fabric: string;
+  productType?: "normal" | "3d";
   colors: {
     name: string;
     hexCode: string;
@@ -80,6 +81,7 @@ export interface IProductRes {
   category: string;
   fabric?: string;
   season?: string;
+  productType: "normal" | "3d";
   sku: string;
   brand: string;
   condition: string;

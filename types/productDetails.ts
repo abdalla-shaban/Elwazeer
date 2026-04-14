@@ -20,6 +20,7 @@ export interface Product {
   offer: Offer;
   isAvailable: boolean;
   colors: Color[];
+  productType: "normal" | "3d";
   slug: string;
   finalPrice: number;
   createdAt: string;
