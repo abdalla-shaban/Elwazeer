@@ -108,6 +108,41 @@ const FilterSheet = () => {
         <Separator />
         <Collapsible>
           <CollapsibleTrigger className="flex cursor-pointer items-center gap-2 justify-between w-full hover:bg-gray-200 bg-gray-100 duration-200 rounded-md p-3 mb-3">
+            الفئة العمرية <BiCollapseVertical />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <ul className="space-y-2">
+              {[
+                { id: "adults", label: "كبار (Adults)" },
+                { id: "kids", label: "أطفال (Kids)" },
+              ].map((age, idx) => (
+                <li key={idx}>
+                  <Button
+                    disabled={isPending}
+                    onClick={() => {
+                      update({ ageGroup: age.id });
+                      setOpenSheet(false);
+                    }}
+                    variant={params.get("ageGroup") === age.id ? "default" : "outline"}
+                  >
+                    {age.label}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+            <Button
+              className="mt-3"
+              variant={"outline"}
+              disabled={isPending}
+              onClick={() => resetOne("ageGroup")}
+            >
+              إزالة الفلتر
+            </Button>
+          </CollapsibleContent>
+        </Collapsible>
+        <Separator />
+        <Collapsible>
+          <CollapsibleTrigger className="flex cursor-pointer items-center gap-2 justify-between w-full hover:bg-gray-200 bg-gray-100 duration-200 rounded-md p-3 mb-3">
             المقاسات <BiCollapseVertical />
           </CollapsibleTrigger>
           <CollapsibleContent>

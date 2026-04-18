@@ -19,6 +19,7 @@ export interface Product {
   metaKeywords: string[];
   offer: Offer;
   isAvailable: boolean;
+  ageGroup?: "kids" | "adults";
   colors: Color[];
   productType: "normal" | "3d";
   slug: string;

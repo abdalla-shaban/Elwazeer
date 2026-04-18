@@ -13,6 +13,10 @@ import {
   Settings2,
   Tag,
   Trash2,
+  Package,
+  Box,
+  User,
+  Baby,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -63,6 +67,7 @@ import { IProductBody, IProductImage } from "@/types/products";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 // --- Schemas ---
 
@@ -123,6 +128,7 @@ export const formSchema = z.object({
     percent: z.coerce.number().min(0).max(100).default(0),
   }),
   productType: z.enum(["normal", "3d"]).default("normal"),
+  ageGroup: z.enum(["kids", "adults"]).default("adults"),
   colors: z.array(colorSchema).min(1, "يجب إضافة لون واحد على الأقل"),
 });
 
@@ -187,6 +193,7 @@ function ColorVariant({
         percent: 0,
       },
       productType: "normal",
+      ageGroup: "adults",
       colors: [
         {
           name: "",
@@ -613,6 +620,7 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
         percent: 0,
       },
       colors: [],
+      ageGroup: "adults",
     },
   });
 
@@ -650,6 +658,7 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
           isAvailable: p.offer?.isAvailable ?? false,
           percent: p.offer?.percent ?? 0,
         },
+        ageGroup: p.ageGroup,
         colors: p.colors.map((c) => ({
           _id: c._id,
           name: c.name,
@@ -707,6 +716,7 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
         "fabric",
         "season",
         "brand",
+        "ageGroup",
       ];
     } else if (step === 2) {
       fieldsToValidate = ["colors"];
@@ -917,7 +927,7 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                   render={({ field }) => (
                     <Field>
                       <FieldLabel className="text-base font-bold">
-                        نوع الطلب
+                        نوع المنتج
                       </FieldLabel>
                       <RadioGroup
                         value={field.value}
@@ -944,23 +954,145 @@ const UpdateProductForm = ({ slug }: { slug: string }) => {
                             ]);
                           }
                         }}
-                        className="flex gap-4 mt-2"
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4"
                       >
-                        <div className="flex items-center space-x-2 space-x-reverse">
-                          <RadioGroupItem value="normal" id="type-normal" />
-                          <label
-                            htmlFor="type-normal"
-                            className="cursor-pointer"
+                        <Label
+                          htmlFor="type-normal"
+                          className={`flex flex-col items-center justify-center gap-4 p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                            field.value === "normal"
+                              ? "bg-primary/10 border-primary shadow-md ring-2 ring-primary/20 scale-[1.02]"
+                              : "bg-background border-muted hover:border-primary/50 hover:bg-muted/50"
+                          }`}
+                        >
+                          <RadioGroupItem
+                            value="normal"
+                            id="type-normal"
+                            className="sr-only"
+                          />
+                          <div
+                            className={`p-3 rounded-xl ${field.value === "normal" ? "bg-primary text-white" : "bg-muted text-muted-foreground transition-colors group-hover:bg-primary/20"}`}
                           >
-                            طلب عادي (Normal)
-                          </label>
-                        </div>
-                        <div className="flex items-center space-x-2 space-x-reverse">
-                          <RadioGroupItem value="3d" id="type-3d" />
-                          <label htmlFor="type-3d" className="cursor-pointer">
-                            طلب 3D
-                          </label>
-                        </div>
+                            <Package className="size-8" />
+                          </div>
+                          <div className="text-center">
+                            <span
+                              className={`block text-lg font-bold ${field.value === "normal" ? "text-primary" : "text-slate-700"}`}
+                            >
+                              منتج عادي
+                            </span>
+                            <span className="text-sm text-slate-500 font-medium">
+                              لمنتجات الملابس الجاهزة
+                            </span>
+                          </div>
+                        </Label>
+
+                        <Label
+                          htmlFor="type-3d"
+                          className={`flex flex-col items-center justify-center gap-4 p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                            field.value === "3d"
+                              ? "bg-primary/10 border-primary shadow-md ring-2 ring-primary/20 scale-[1.02]"
+                              : "bg-background border-muted hover:border-primary/50 hover:bg-muted/50"
+                          }`}
+                        >
+                          <RadioGroupItem
+                            value="3d"
+                            id="type-3d"
+                            className="sr-only"
+                          />
+                          <div
+                            className={`p-3 rounded-xl ${field.value === "3d" ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}
+                          >
+                            <Box className="size-8" />
+                          </div>
+                          <div className="text-center">
+                            <span
+                              className={`block text-lg font-bold ${field.value === "3d" ? "text-primary" : "text-slate-700"}`}
+                            >
+                              منتج 3D
+                            </span>
+                            <span className="text-sm text-slate-500 font-medium">
+                              للتصاميم المخصصة ثلاثية الأبعاد
+                            </span>
+                          </div>
+                        </Label>
+                      </RadioGroup>
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="ageGroup"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel className="text-base font-bold">
+                        الفئة العمرية
+                      </FieldLabel>
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4"
+                        dir="rtl"
+                      >
+                        <Label
+                          htmlFor="age-adults"
+                          className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
+                            field.value === "adults"
+                              ? "bg-primary/10 border-primary shadow-sm"
+                              : "bg-background border-muted hover:border-primary/30"
+                          }`}
+                        >
+                          <RadioGroupItem
+                            value="adults"
+                            id="age-adults"
+                            className="sr-only"
+                          />
+                          <div
+                            className={`p-2 rounded-lg ${field.value === "adults" ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}
+                          >
+                            <User className="size-6" />
+                          </div>
+                          <div className="flex-1">
+                            <span
+                              className={`block font-bold ${field.value === "adults" ? "text-primary" : "text-slate-700"}`}
+                            >
+                              كبار (Adults)
+                            </span>
+                          </div>
+                          {field.value === "adults" && (
+                            <Check className="size-5 text-primary" />
+                          )}
+                        </Label>
+
+                        <Label
+                          htmlFor="age-kids"
+                          className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
+                            field.value === "kids"
+                              ? "bg-primary/10 border-primary shadow-sm"
+                              : "bg-background border-muted hover:border-primary/30"
+                          }`}
+                        >
+                          <RadioGroupItem
+                            value="kids"
+                            id="age-kids"
+                            className="sr-only"
+                          />
+                          <div
+                            className={`p-2 rounded-lg ${field.value === "kids" ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}
+                          >
+                            <Baby className="size-6" />
+                          </div>
+                          <div className="flex-1">
+                            <span
+                              className={`block font-bold ${field.value === "kids" ? "text-primary" : "text-slate-700"}`}
+                            >
+                              أطفال (Kids)
+                            </span>
+                          </div>
+                          {field.value === "kids" && (
+                            <Check className="size-5 text-primary" />
+                          )}
+                        </Label>
                       </RadioGroup>
                     </Field>
                   )}

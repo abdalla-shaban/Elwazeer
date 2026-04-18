@@ -36,6 +36,7 @@ export interface Product {
   price: number;
   images: ProductDetailsImage[];
   isAvailable: boolean;
+  ageGroup?: "kids" | "adults";
   category: string;
   sku: string;
   brand: string;

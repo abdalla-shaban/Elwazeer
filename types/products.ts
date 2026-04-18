@@ -24,6 +24,7 @@ export interface IProductBody {
   category: string;
   fabric: string;
   productType?: "normal" | "3d";
+  ageGroup?: "kids" | "adults";
   colors: {
     name: string;
     hexCode: string;
@@ -81,6 +82,7 @@ export interface IProductRes {
   category: string;
   fabric?: string;
   season?: string;
+  ageGroup?: "kids" | "adults";
   productType: "normal" | "3d";
   sku: string;
   brand: string;

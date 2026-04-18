@@ -12,31 +12,31 @@ const socialItems = [
     Icon: FaFacebookF,
     style:
       "hover:-translate-y-0.5 shadow shadow-transparent hover:shadow-primary bg-blue-600",
-    href: "https://www.facebook.com/share/17KcPsaNdT/",
+    href: "#",
   },
   {
     Icon: FaInstagram,
     style:
       "hover:-translate-y-0.5 shadow shadow-transparent hover:shadow-primary bg-red-700",
-    href: "https://www.instagram.com/yara_stor1?igsh=ZndxYWN4NzZ5czY2",
+    href: "#",
   },
   {
     Icon: FaTelegram,
     style:
       "hover:-translate-y-0.5 shadow shadow-transparent hover:shadow-primary bg-sky-600",
-    href: "https://t.me/yara33st",
+    href: "#",
   },
   {
     Icon: FaTiktok,
     style:
       "hover:-translate-y-0.5 shadow shadow-transparent hover:shadow-primary bg-black",
-    href: "https://www.tiktok.com/@yara_stor?_t=8mKPZ7mfw4E&_r=1",
+    href: "#",
   },
   {
     Icon: FaWhatsapp,
     style:
       "hover:-translate-y-0.5 shadow shadow-transparent hover:shadow-primary bg-green-600",
-    href: "https://wa.me/+201070500671?text=",
+    href: "#",
   },
 ];
 

@@ -1,16 +1,17 @@
 import CardsListSkeleton from "@/components/CardsListSkeleton";
-import ImmersiveHero from "@/components/home/ImmersiveHero";
 import BentoCategories from "@/components/home/BentoCategories";
 import GlassFeatureSection from "@/components/home/GlassFeatureSection";
-import ProductsList from "@/components/products/ProductsList";
 import ProductSlider from "@/components/products/ProductSlider";
+import ProductsList from "@/components/products/ProductsList";
 import { getProducts } from "@/lib/api";
-import { Headset, Truck, Verified } from "lucide-react";
-import { Metadata } from "next";
-import { Suspense } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import * as motion from "motion/react-client";
+import { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "الرئيسية",
   description:
@@ -82,8 +83,8 @@ export default async function Home({
         </motion.div>
       </section>
 
-      {/* 2. Brand Features (Glass Style) */}
-      <GlassFeatureSection />
+      {/* 4. Bento Category Navigation */}
+      <BentoCategories />
 
       <div className="space-y-32">
         {/* 3. Featured 3D Abayas Section */}
@@ -98,8 +99,6 @@ export default async function Home({
           </section>
         )}
 
-        {/* 4. Bento Category Navigation */}
-        <BentoCategories />
         {/* 5. Best Sellers */}
         <div className="container">
           <ProductSlider
@@ -117,6 +116,8 @@ export default async function Home({
             products={latestProducts.data}
           />
         </div>
+        {/* 2. Brand Features (Glass Style) */}
+        <GlassFeatureSection />
 
         {/* 8. Browse All Products with Infinite Scroll/Grid */}
         <div className="container pb-24 space-y-12">

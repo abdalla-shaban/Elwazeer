@@ -18,8 +18,9 @@ const SidebarFilter = () => {
   const activeCategory = params.get("category");
   const activeFabric = params.get("fabric");
   const activeSize = params.get("size");
+  const activeAgeGroup = params.get("ageGroup");
 
-  const hasAnyFilter = activeCategory || activeFabric || activeSize;
+  const hasAnyFilter = activeCategory || activeFabric || activeSize || activeAgeGroup;
 
   return (
     <div className={`w-full max-w-[280px] bg-white rounded-3xl border border-slate-100 p-6 shadow-sm sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] overscroll-contain hidden lg:block transition-opacity duration-300 ${isPending ? "opacity-50 pointer-events-none" : "opacity-100"}`}>
@@ -117,6 +118,53 @@ const SidebarFilter = () => {
                     className={`font-medium text-base cursor-pointer transition-colors ${isChecked ? "text-primary font-bold" : "text-slate-600 group-hover:text-slate-900"}`}
                   >
                     {fab}
+                  </Label>
+                </div>
+              );
+            })}
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+
+      {/* Age Group */}
+      <div className="mb-6 border-b border-slate-100 pb-6">
+        <Collapsible defaultOpen className="space-y-4">
+          <div className="flex items-center justify-between">
+            <CollapsibleTrigger className="flex flex-1 items-center justify-between text-lg font-bold text-slate-800 hover:text-primary transition-colors group">
+              الفئة العمرية
+              <ChevronDown className="size-4 text-slate-400 group-data-[state=open]:rotate-180 transition-transform duration-300 mr-2" />
+            </CollapsibleTrigger>
+            {activeAgeGroup && (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  update({ ageGroup: null, page: 1 });
+                }}
+                className="text-xs font-bold text-slate-400 hover:text-red-500 border border-slate-200 hover:border-red-200 hover:bg-red-50 px-2 py-1 rounded-md transition-colors mr-3"
+              >
+                مسح
+              </button>
+            )}
+          </div>
+          <CollapsibleContent className="space-y-4">
+            {[
+              { id: "adults", label: "كبار (Adults)" },
+              { id: "kids", label: "أطفال (Kids)" },
+            ].map((age, idx) => {
+              const isChecked = activeAgeGroup === age.id;
+              return (
+                <div key={idx} className="flex items-center gap-3 group">
+                  <Checkbox 
+                    id={`age-${idx}`} 
+                    checked={isChecked}
+                    onCheckedChange={() => update({ ageGroup: isChecked ? null : age.id, page: 1 })}
+                    className="size-5 rounded-md border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <Label 
+                    htmlFor={`age-${idx}`}
+                    className={`font-medium text-base cursor-pointer transition-colors ${isChecked ? "text-primary font-bold" : "text-slate-600 group-hover:text-slate-900"}`}
+                  >
+                    {age.label}
                   </Label>
                 </div>
               );

@@ -58,7 +58,7 @@ const BentoCategories = () => {
         </motion.h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-6 h-[800px] md:h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-4 grid-rows-2 gap-6  lg:h-[600px]">
         {categories.map((cat, idx) => (
           <motion.div
             key={idx}

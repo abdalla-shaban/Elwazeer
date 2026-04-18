@@ -6,10 +6,9 @@ import {
 } from "@/types/auth";
 import { CartResponse } from "@/types/cart";
 import { OrdersResponse } from "@/types/orders";
-import { Color, ProductDetailsResponse } from "@/types/productDetails";
+import { ProductDetailsResponse } from "@/types/productDetails";
 import {
   IProductBody,
-  IProductRes,
   IProductsResponse,
   IRelatedProductsResponse,
   IWishlistRes,
@@ -254,6 +253,7 @@ export const getProducts = async ({
   sort = "",
   isAvailable = "",
   productType = "",
+  ageGroup = "",
 }: {
   page?: number;
   limit?: number;
@@ -269,10 +269,11 @@ export const getProducts = async ({
   isAvailable?: boolean | string;
   sort?: string;
   productType?: string;
+  ageGroup?: string;
 }): Promise<IProductsResponse> => {
   try {
     const res = await fetch(
-      `${BASE_URL}/products/?isAvailable=${isAvailable}&limit=${limit}&page=${page}&q=${q}&category=${category}&fabric=${fabric}&season=${season}&minPrice=${minPrice}&maxPrice=${maxPrice}&color=${color}&size=${size}&sort=${sort}&productType=${productType}`,
+      `${BASE_URL}/products/?isAvailable=${isAvailable}&limit=${limit}&page=${page}&q=${q}&category=${category}&fabric=${fabric}&season=${season}&minPrice=${minPrice}&maxPrice=${maxPrice}&color=${color}&size=${size}&sort=${sort}&productType=${productType}&ageGroup=${ageGroup}`,
       {
         cache: "no-store",
       },
